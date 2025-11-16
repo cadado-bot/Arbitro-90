@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Árbitro 90º",
+  "description": "Uma aplicação para árbitros de futebol monitorarem partidas, incluindo cronômetro, gerenciamento de eventos do jogo (gols, cartões, substituições) e um painel de relatório completo da partida.",
+  "requestFramePermissions": []
+}
