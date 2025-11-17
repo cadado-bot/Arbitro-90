@@ -17,6 +17,7 @@ export interface Player {
 }
 
 export interface Team {
+  id?: string;
   name: string;
   flag: string | null;
   players: Player[];

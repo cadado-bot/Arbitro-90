@@ -4,8 +4,10 @@ import MatchManagement from './components/MatchManagement';
 import Dashboard from './components/Dashboard';
 import TournamentComponent from './components/Tournament';
 import LeagueComponent from './components/League';
-import { MatchState, Tournament, Matchup, League, LeagueTeamStats, LeagueMatchup } from './types';
-import { ClockIcon, WhistleIcon, ChartBarIcon, WhistleBallIcon, TrashIcon, TrophyIcon, AlertTriangleIcon, ListBulletIcon, PlusIcon } from './components/icons';
+import TeamRegistryModal from './components/TeamRegistryModal';
+// FIX: Import 'LeagueMatchup' type to resolve 'Cannot find name' errors.
+import { MatchState, Tournament, Matchup, League, Team, LeagueMatchup } from './types';
+import { ClockIcon, WhistleIcon, ChartBarIcon, WhistleBallIcon, TrophyIcon, ListBulletIcon, AlertTriangleIcon } from './components/icons';
 
 type Tab = 'stopwatch' | 'management' | 'dashboard' | 'tournament' | 'league';
 
@@ -21,7 +23,7 @@ type SavedGame = {
 const SAVED_GAMES_KEY = 'arbitro90_savedGamesList';
 const SAVED_TOURNAMENTS_KEY = 'arbitro90_savedTournaments';
 const SAVED_LEAGUES_KEY = 'arbitro90_savedLeagues';
-
+const REGISTERED_TEAMS_KEY = 'arbitro90_registeredTeams';
 
 const initialMatchState: MatchState = {
   teamA: { name: "Time A", flag: null, players: [], score: 0 },
@@ -53,6 +55,9 @@ const App: React.FC = () => {
   const [isDeleteLeagueModalOpen, setIsDeleteLeagueModalOpen] = useState(false);
   const activeLeague = savedLeagues.find(l => l.name === selectedLeagueName) || null;
 
+  const [registeredTeams, setRegisteredTeams] = useState<Team[]>([]);
+  const [isTeamRegistryModalOpen, setIsTeamRegistryModalOpen] = useState(false);
+
   useEffect(() => {
     try {
       const savedGamesJSON = localStorage.getItem(SAVED_GAMES_KEY);
@@ -67,6 +72,10 @@ const App: React.FC = () => {
        const savedLeaguesJSON = localStorage.getItem(SAVED_LEAGUES_KEY);
       if (savedLeaguesJSON) {
         setSavedLeagues(JSON.parse(savedLeaguesJSON));
+      }
+       const registeredTeamsJSON = localStorage.getItem(REGISTERED_TEAMS_KEY);
+      if (registeredTeamsJSON) {
+        setRegisteredTeams(JSON.parse(registeredTeamsJSON));
       }
     } catch (error) {
       console.error("Failed to load saved data", error);
@@ -86,6 +95,11 @@ const App: React.FC = () => {
   const handleReset = () => { setIsRunning(false); setTime(0); };
   const handleSetTotalTime = (minutes: number) => { if (time === 0) setTotalTime(minutes * 60); };
   const handleAddTime = (minutes: number) => setTotalTime(prev => prev + (minutes * 60));
+
+  const handleSaveRegisteredTeams = (teams: Team[]) => {
+    setRegisteredTeams(teams);
+    localStorage.setItem(REGISTERED_TEAMS_KEY, JSON.stringify(teams));
+  };
 
   const handleSaveTournaments = (tournaments: Tournament[]) => {
       setSavedTournaments(tournaments);
@@ -157,8 +171,8 @@ const App: React.FC = () => {
     matchup.teamA.score = savedMatchState.teamA.score;
     matchup.teamB.score = savedMatchState.teamB.score;
 
-    const initialStats: Omit<LeagueTeamStats, 'name'> = { points: 0, gamesPlayed: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, goalDifference: 0 };
-    const statsMap = new Map<string, LeagueTeamStats>(leagueToUpdate.stats.map(s => [s.name, { ...s, ...initialStats }]));
+    const initialStats = { points: 0, gamesPlayed: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0 };
+    const statsMap = new Map<string, any>(leagueToUpdate.stats.map(s => [s.name, { ...s, ...initialStats }]));
 
     for (const m of leagueToUpdate.matchups) {
         if (m.teamA.score !== null && m.teamB.score !== null) {
@@ -368,7 +382,14 @@ const App: React.FC = () => {
       const savedGames: SavedGame[] = savedGamesJSON ? JSON.parse(savedGamesJSON) : [];
       let gameExists = savedGames.some(g => g.name === gameKey);
       if (!gameExists) {
-          const newMatchState: MatchState = { teamA: { name: matchup.teamA.name, flag: null, players: [], score: 0 }, teamB: { name: matchup.teamB.name, flag: null, players: [], score: 0 }, events: [] };
+          const teamAData = registeredTeams.find(t => t.name === matchup.teamA.name);
+          const teamBData = registeredTeams.find(t => t.name === matchup.teamB.name);
+
+          const newMatchState: MatchState = {
+            teamA: teamAData ? { ...JSON.parse(JSON.stringify(teamAData)), score: 0 } : { name: matchup.teamA.name, flag: null, players: [], score: 0 },
+            teamB: teamBData ? { ...JSON.parse(JSON.stringify(teamBData)), score: 0 } : { name: matchup.teamB.name, flag: null, players: [], score: 0 },
+            events: []
+          };
           const newSaveData = { matchState: newMatchState, time: 0, totalTime: 90 * 60 };
           savedGames.push({ name: gameKey, saveData: newSaveData });
           localStorage.setItem(SAVED_GAMES_KEY, JSON.stringify(savedGames));
@@ -376,14 +397,14 @@ const App: React.FC = () => {
       }
       handleLoadGame(gameKey!); setActiveTab('management');
     }
-  }, [savedTournaments, handleLoadGame]);
+  }, [savedTournaments, handleLoadGame, registeredTeams]);
   
    const handleSaveActiveTournament = () => {
     localStorage.setItem(SAVED_TOURNAMENTS_KEY, JSON.stringify(savedTournaments));
    };
 
   const handleCreateLeague = (teamNames: string[], leagueName: string) => {
-    const stats: LeagueTeamStats[] = teamNames.map(name => ({ name, points: 0, gamesPlayed: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, goalDifference: 0 }));
+    const stats = teamNames.map(name => ({ name, points: 0, gamesPlayed: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, goalDifference: 0 }));
     let idCounter = 1;
 
     const teams = [...teamNames];
@@ -437,14 +458,21 @@ const App: React.FC = () => {
     const savedGames: SavedGame[] = savedGamesJSON ? JSON.parse(savedGamesJSON) : [];
     let gameExists = savedGames.some(g => g.name === gameKey);
     if (!gameExists) {
-        const newMatchState: MatchState = { teamA: { name: matchup.teamA.name, flag: null, players: [], score: 0 }, teamB: { name: matchup.teamB.name, flag: null, players: [], score: 0 }, events: [] };
+        const teamAData = registeredTeams.find(t => t.name === matchup.teamA.name);
+        const teamBData = registeredTeams.find(t => t.name === matchup.teamB.name);
+        
+        const newMatchState: MatchState = { 
+            teamA: teamAData ? { ...JSON.parse(JSON.stringify(teamAData)), score: 0 } : { name: matchup.teamA.name, flag: null, players: [], score: 0 },
+            teamB: teamBData ? { ...JSON.parse(JSON.stringify(teamBData)), score: 0 } : { name: matchup.teamB.name, flag: null, players: [], score: 0 },
+            events: [] 
+        };
         const newSaveData = { matchState: newMatchState, time: 0, totalTime: 90 * 60 };
         savedGames.push({ name: gameKey, saveData: newSaveData });
         localStorage.setItem(SAVED_GAMES_KEY, JSON.stringify(savedGames));
         setSavedGamesList(savedGames.map(g => ({ name: g.name })));
     }
     handleLoadGame(gameKey); setActiveTab('management');
-  }, [handleLoadGame]);
+  }, [handleLoadGame, registeredTeams]);
   
   const handleLoadTournament = (name: string) => {
     setSelectedTournamentName(name);
@@ -475,8 +503,8 @@ const App: React.FC = () => {
       case 'stopwatch': return <Stopwatch time={time} totalTime={totalTime} isRunning={isRunning} onStart={handleStart} onStop={handleStop} onReset={handleReset} onSetTotalTime={handleSetTotalTime} onAddTime={handleAddTime} />;
       case 'management': return <MatchManagement matchState={matchState} setMatchState={setMatchState} currentTime={formatTime(time)} onSaveGame={handleOpenSaveModal} onNewGame={handleNewGame} savedGamesList={savedGamesList} selectedGame={selectedGame} onLoadGame={handleLoadGame} onOpenDeleteModal={handleOpenDeleteModal} />;
       case 'dashboard': return <Dashboard matchState={matchState} onClearReport={handleClearReport} />;
-      case 'tournament': return <TournamentComponent tournament={activeTournament} onCreateTournament={handleCreateTournament} onManageMatch={handleManageTournamentMatch} savedTournaments={savedTournaments} selectedTournamentName={selectedTournamentName} onLoadTournament={handleLoadTournament} onSaveTournament={handleSaveActiveTournament} onOpenDeleteTournamentModal={handleOpenDeleteTournamentModal} onNewTournament={handleNewTournament} />;
-      case 'league': return <LeagueComponent league={activeLeague} onCreateLeague={handleCreateLeague} onManageMatch={handleManageLeagueMatch} onSaveLeague={() => handleSaveLeagues(savedLeagues)} onNewLeague={handleNewLeague} savedLeagues={savedLeagues} selectedLeagueName={selectedLeagueName} onLoadLeague={handleLoadLeague} onOpenDeleteLeagueModal={handleOpenDeleteLeagueModal} />;
+      case 'tournament': return <TournamentComponent tournament={activeTournament} onCreateTournament={handleCreateTournament} onManageMatch={handleManageTournamentMatch} savedTournaments={savedTournaments} selectedTournamentName={selectedTournamentName} onLoadTournament={handleLoadTournament} onSaveTournament={handleSaveActiveTournament} onOpenDeleteTournamentModal={handleOpenDeleteTournamentModal} onNewTournament={handleNewTournament} onOpenTeamRegistry={() => setIsTeamRegistryModalOpen(true)} registeredTeams={registeredTeams} />;
+      case 'league': return <LeagueComponent league={activeLeague} onCreateLeague={handleCreateLeague} onManageMatch={handleManageLeagueMatch} onSaveLeague={() => handleSaveLeagues(savedLeagues)} onNewLeague={handleNewLeague} savedLeagues={savedLeagues} selectedLeagueName={selectedLeagueName} onLoadLeague={handleLoadLeague} onOpenDeleteLeagueModal={handleOpenDeleteLeagueModal} onOpenTeamRegistry={() => setIsTeamRegistryModalOpen(true)} registeredTeams={registeredTeams} />;
       default: return null;
     }
   };
@@ -501,6 +529,9 @@ const App: React.FC = () => {
         </div>
       </header>
       <main className="flex-grow container mx-auto p-4 md:p-6"><div className="bg-dark-surface rounded-lg shadow-xl h-full">{renderContent()}</div></main>
+      
+      {isTeamRegistryModalOpen && <TeamRegistryModal registeredTeams={registeredTeams} onSave={handleSaveRegisteredTeams} onClose={() => setIsTeamRegistryModalOpen(false)} />}
+      
       {isSaveModalOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setIsSaveModalOpen(false)}>
             <div className="bg-dark-card p-6 rounded-lg w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>

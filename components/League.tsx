@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { League, LeagueMatchup } from '../types';
-import { PlusIcon, SaveIcon, TrashIcon } from './icons';
+import { League, LeagueMatchup, Team } from '../types';
+import { PlusIcon, SaveIcon, TrashIcon, UsersIcon } from './icons';
 
 interface LeagueProps {
     league: League | null;
@@ -12,9 +12,11 @@ interface LeagueProps {
     selectedLeagueName: string;
     onLoadLeague: (name: string) => void;
     onOpenDeleteLeagueModal: () => void;
+    onOpenTeamRegistry: () => void;
+    registeredTeams: Team[];
 }
 
-const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: string[], leagueName: string) => void }> = ({ onClose, onCreate }) => {
+const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: string[], leagueName: string) => void; registeredTeams: Team[] }> = ({ onClose, onCreate, registeredTeams }) => {
     const [numTeams, setNumTeams] = useState(4);
     const [teamNames, setTeamNames] = useState<string[]>(Array(4).fill(''));
     const [leagueName, setLeagueName] = useState('');
@@ -39,10 +41,15 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
         }
     };
 
+    const teamDatalistId = 'registered-teams-list-league';
+
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="bg-dark-card p-6 rounded-lg w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-lg font-bold mb-4">Criar Nova Liga</h3>
+                <datalist id={teamDatalistId}>
+                    {registeredTeams.map(team => <option key={team.id || team.name} value={team.name} />)}
+                </datalist>
                 {step === 1 ? (
                     <div>
                         <label htmlFor="leagueName" className="block text-sm text-dark-text-secondary mb-2">Nome do Campeonato</label>
@@ -83,6 +90,7 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
                                     onChange={(e) => handleNameChange(index, e.target.value)}
                                     placeholder={`Time ${index + 1}`}
                                     className="input-field w-full"
+                                    list={teamDatalistId}
                                     required
                                 />
                             ))}
@@ -99,7 +107,7 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
 };
 
 
-const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onManageMatch, onSaveLeague, onNewLeague, savedLeagues, selectedLeagueName, onLoadLeague, onOpenDeleteLeagueModal }) => {
+const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onManageMatch, onSaveLeague, onNewLeague, savedLeagues, selectedLeagueName, onLoadLeague, onOpenDeleteLeagueModal, onOpenTeamRegistry, registeredTeams }) => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
 
@@ -114,14 +122,20 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <h2 className="text-2xl font-bold text-dark-text mb-2">Nenhuma liga selecionada.</h2>
                 <p className="text-dark-text-secondary mb-6">Crie uma nova liga ou carregue uma existente.</p>
-                <div className="flex items-center gap-2 mb-6">
-                    <label htmlFor="saved-leagues" className="text-sm font-medium text-dark-text-secondary">Ligas Salvas:</label>
-                    <select id="saved-leagues" value={selectedLeagueName} onChange={(e) => onLoadLeague(e.target.value)} className="input-field-header">
-                        <option value="" disabled>Carregar uma liga</option>
-                        {savedLeagues.map(l => (<option key={l.name} value={l.name}>{l.name}</option>))}
-                    </select>
-                     <button onClick={onOpenDeleteLeagueModal} disabled={!selectedLeagueName} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title="Apagar liga selecionada">
-                        <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
+                 <div className="flex flex-col items-center gap-4 mb-6 w-full max-w-md">
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="saved-leagues" className="text-sm font-medium text-dark-text-secondary">Ligas Salvas:</label>
+                        <select id="saved-leagues" value={selectedLeagueName} onChange={(e) => onLoadLeague(e.target.value)} className="input-field-header">
+                            <option value="" disabled>Carregar uma liga</option>
+                            {savedLeagues.map(l => (<option key={l.name} value={l.name}>{l.name}</option>))}
+                        </select>
+                        <button onClick={onOpenDeleteLeagueModal} disabled={!selectedLeagueName} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title="Apagar liga selecionada">
+                            <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
+                        </button>
+                    </div>
+                    <button onClick={onOpenTeamRegistry} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center justify-center gap-2 w-full">
+                        <UsersIcon className="h-5 w-5" />
+                        Gerenciar Times Registrados
                     </button>
                 </div>
                  <p className="text-dark-text-secondary mb-4">Ou crie uma nova:</p>
@@ -132,8 +146,8 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
                     <PlusIcon className="h-6 w-6" />
                     Criar Nova Liga
                 </button>
-                {isCreateModalOpen && <CreateLeagueModal onCreate={onCreateLeague} onClose={() => setIsCreateModalOpen(false)} />}
-                 <style>{`.input-field { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 8px 12px; border-radius: 6px; } .input-field-header { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-size: 0.875rem; }`}</style>
+                {isCreateModalOpen && <CreateLeagueModal onCreate={onCreateLeague} onClose={() => setIsCreateModalOpen(false)} registeredTeams={registeredTeams} />}
+                 <style>{`.input-field { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 8px 12px; border-radius: 6px; } .input-field-header { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-size: 0.875rem; } .btn-primary { padding: 6px 10px; font-weight: 600; color: white; border-radius: 6px; transition: background-color 0.2s; }`}</style>
             </div>
         );
     }
@@ -167,13 +181,13 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
                 </div>
                  <h3 className="text-xl font-bold text-dark-text">{league.name}</h3>
                  <div className="flex items-center gap-2">
-                    <button onClick={handleSave} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
-                        <SaveIcon className="h-4 w-4" />
-                        Salvar Liga
-                    </button>
                     <button onClick={onNewLeague} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center gap-2">
                         <PlusIcon className="h-4 w-4" />
                         Nova Liga
+                    </button>
+                    <button onClick={handleSave} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
+                        <SaveIcon className="h-4 w-4" />
+                        Salvar Liga
                     </button>
                  </div>
             </div>

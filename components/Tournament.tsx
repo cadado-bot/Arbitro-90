@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Tournament, Matchup } from '../types';
-import { PlusIcon, SaveIcon, TrashIcon } from './icons';
+import { Tournament, Matchup, Team } from '../types';
+import { PlusIcon, SaveIcon, TrashIcon, UsersIcon } from './icons';
 
 interface TournamentProps {
     tournament: Tournament | null;
@@ -12,6 +12,8 @@ interface TournamentProps {
     onSaveTournament: () => void;
     onOpenDeleteTournamentModal: () => void;
     onNewTournament: () => void;
+    onOpenTeamRegistry: () => void;
+    registeredTeams: Team[];
 }
 
 const MatchupCard: React.FC<{ matchup: Matchup, onManageMatch: () => void, title?: string }> = ({ matchup, onManageMatch, title }) => {
@@ -51,7 +53,7 @@ const BracketColumn: React.FC<{ title: string; matchups: Matchup[]; onManageMatc
     </div>
 );
 
-const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, teams: number }, onClose: () => void; onCreate: (teamNames: string[], tournamentName: string) => void }> = ({ phase, onClose, onCreate }) => {
+const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, teams: number }, onClose: () => void; onCreate: (teamNames: string[], tournamentName: string) => void; registeredTeams: Team[] }> = ({ phase, onClose, onCreate, registeredTeams }) => {
     const [teamNames, setTeamNames] = useState<string[]>(Array(phase.teams).fill(''));
     const [tournamentName, setTournamentName] = useState('');
 
@@ -69,6 +71,8 @@ const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, team
         }
     };
 
+    const teamDatalistId = 'registered-teams-list';
+
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="bg-dark-card p-6 rounded-lg w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -77,6 +81,9 @@ const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, team
                     <label htmlFor="tournamentName" className="block text-sm text-dark-text-secondary">Nome do Torneio</label>
                     <input id="tournamentName" type="text" value={tournamentName} onChange={(e) => setTournamentName(e.target.value)} placeholder="Ex: Copa do Mundo" className="input-field w-full" required />
                     <p className="text-sm text-dark-text-secondary pt-2">Insira os nomes das {phase.teams} equipes para a fase de {phase.name}.</p>
+                    <datalist id={teamDatalistId}>
+                        {registeredTeams.map(team => <option key={team.id || team.name} value={team.name} />)}
+                    </datalist>
                     <div className={`grid ${phase.teams > 4 ? 'grid-cols-2' : 'grid-cols-1'} gap-3 max-h-60 overflow-y-auto pr-2`}>
                         {teamNames.map((name, index) => (
                             <input
@@ -86,6 +93,7 @@ const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, team
                                 onChange={(e) => handleNameChange(index, e.target.value)}
                                 placeholder={`Time ${index + 1}`}
                                 className="input-field w-full"
+                                list={teamDatalistId}
                                 required
                             />
                         ))}
@@ -115,7 +123,7 @@ const tournamentPhases = [
 const roundOrder = ['DEZESSEIS AVOS DE FINAL', 'OITAVAS DE FINAL', 'QUARTAS DE FINAL', 'SEMIFINAIS', 'FINAL'];
 
 
-const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTournament, onManageMatch, savedTournaments, selectedTournamentName, onLoadTournament, onSaveTournament, onOpenDeleteTournamentModal, onNewTournament }) => {
+const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTournament, onManageMatch, savedTournaments, selectedTournamentName, onLoadTournament, onSaveTournament, onOpenDeleteTournamentModal, onNewTournament, onOpenTeamRegistry, registeredTeams }) => {
     const [creationPhase, setCreationPhase] = useState<{ key: string, name: string, teams: number } | null>(null);
     const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
 
@@ -131,13 +139,23 @@ const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTo
                 <h2 className="text-2xl font-bold text-dark-text mb-2">Nenhum torneio em andamento.</h2>
                 <p className="text-dark-text-secondary mb-6">Crie um novo torneio ou carregue um existente.</p>
                 
-                <div className="flex items-center gap-2 mb-6">
-                    <label htmlFor="saved-tournaments" className="text-sm font-medium text-dark-text-secondary">Torneios Salvos:</label>
-                    <select id="saved-tournaments" value={selectedTournamentName} onChange={(e) => onLoadTournament(e.target.value)} className="input-field-header">
-                        <option value="" disabled>Carregar um torneio</option>
-                        {savedTournaments.map(t => (<option key={t.name} value={t.name}>{t.name}</option>))}
-                    </select>
+                 <div className="flex flex-col items-center gap-4 mb-6 w-full max-w-md">
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="saved-tournaments" className="text-sm font-medium text-dark-text-secondary">Torneios Salvos:</label>
+                        <select id="saved-tournaments" value={selectedTournamentName} onChange={(e) => onLoadTournament(e.target.value)} className="input-field-header">
+                            <option value="" disabled>Carregar um torneio</option>
+                            {savedTournaments.map(t => (<option key={t.name} value={t.name}>{t.name}</option>))}
+                        </select>
+                         <button onClick={onOpenDeleteTournamentModal} disabled={!selectedTournamentName} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title="Apagar torneio selecionado">
+                            <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
+                        </button>
+                    </div>
+                    <button onClick={onOpenTeamRegistry} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center justify-center gap-2 w-full">
+                        <UsersIcon className="h-5 w-5" />
+                        Gerenciar Times Registrados
+                    </button>
                 </div>
+
 
                 <p className="text-dark-text-secondary mb-4">Ou crie um novo:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -152,7 +170,7 @@ const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTo
                         </button>
                     ))}
                 </div>
-                {creationPhase && <CreateTournamentModal phase={creationPhase} onCreate={(teams, name) => onCreateTournament(teams, name, creationPhase)} onClose={() => setCreationPhase(null)} />}
+                {creationPhase && <CreateTournamentModal phase={creationPhase} onCreate={(teams, name) => onCreateTournament(teams, name, creationPhase)} onClose={() => setCreationPhase(null)} registeredTeams={registeredTeams} />}
                 <style>{`.btn-primary { padding: 10px 16px; font-size: 1rem; } .input-field-header { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-size: 0.875rem; }`}</style>
             </div>
         );
@@ -179,13 +197,13 @@ const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTo
                 </div>
                 <h2 className="text-xl font-bold">{tournament.name}</h2>
                 <div className="flex items-center gap-2">
+                     <button onClick={onNewTournament} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center gap-2">
+                        <PlusIcon className="h-4 w-4" />
+                        Novo Torneio
+                    </button>
                     <button onClick={handleSave} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
                         <SaveIcon className="h-4 w-4" />
                         Salvar Torneio
-                    </button>
-                    <button onClick={onNewTournament} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center gap-2">
-                        <PlusIcon className="h-4 w-4" />
-                        Novo Torneio
                     </button>
                 </div>
             </div>
