@@ -1,17 +1,16 @@
-
 export const translations = {
   pt: {
     // Auth
     loginTitle: 'Entrar na sua conta',
     signupTitle: 'Criar uma nova conta',
-    emailLabel: 'Email',
+    usernameLabel: 'Nome de usuário',
     passwordLabel: 'Senha',
     loginButton: 'Entrar',
     signupButton: 'Cadastrar',
     switchTologin: 'Já tem uma conta? Entre aqui',
     switchToSignup: 'Não tem uma conta? Cadastre-se',
-    loginError: 'Email ou senha inválidos.',
-    signupError: 'Usuário já existe ou os dados são inválidos.',
+    loginError: 'Nome de usuário ou senha inválidos.',
+    signupError: 'Nome de usuário já existe ou os dados são inválidos.',
 
     // Header & Tabs
     appTitle: 'ÁRBITRO',
@@ -162,14 +161,14 @@ export const translations = {
     // Auth
     loginTitle: 'Login to your account',
     signupTitle: 'Create a new account',
-    emailLabel: 'Email',
+    usernameLabel: 'Username',
     passwordLabel: 'Password',
     loginButton: 'Login',
     signupButton: 'Sign Up',
     switchTologin: 'Already have an account? Login here',
     switchToSignup: "Don't have an account? Sign up",
-    loginError: 'Invalid email or password.',
-    signupError: 'User already exists or data is invalid.',
+    loginError: 'Invalid username or password.',
+    signupError: 'Username already exists or data is invalid.',
 
     // Header & Tabs
     appTitle: 'REFEREE',
@@ -320,14 +319,14 @@ export const translations = {
     // Auth
     loginTitle: 'Connectez-vous à votre compte',
     signupTitle: 'Créer un nouveau compte',
-    emailLabel: 'Email',
+    usernameLabel: "Nom d'utilisateur",
     passwordLabel: 'Mot de passe',
     loginButton: 'Connexion',
     signupButton: "S'inscrire",
     switchTologin: 'Vous avez déjà un compte? Connectez-vous',
     switchToSignup: "Pas de compte? Inscrivez-vous",
-    loginError: 'Email ou mot de passe invalide.',
-    signupError: 'Utilisateur déjà existant ou données invalides.',
+    loginError: "Nom d'utilisateur ou mot de passe invalide.",
+    signupError: "Nom d'utilisateur déjà existant ou données invalides.",
 
     // Header & Tabs
     appTitle: 'ARBITRE',

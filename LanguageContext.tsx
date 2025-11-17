@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, FC } from 'react';
 import { translations } from './translations';
 
 type Language = 'pt' | 'en' | 'fr';
@@ -16,7 +16,8 @@ interface LanguageProviderProps {
   children: ReactNode;
 }
 
-export const LanguageProvider = ({ children }: LanguageProviderProps) => {
+// FIX: Changed to an explicit React.FC to resolve type inference issues with children props.
+export const LanguageProvider: FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('pt');
 
   const t = (key: string): string => {

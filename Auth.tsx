@@ -1,16 +1,15 @@
-
 import React, { useState } from 'react';
 import { WhistleBallIcon } from './components/icons';
 import { useLanguage } from './LanguageContext';
 
 interface AuthProps {
-    onLogin: (email: string, pass: string) => boolean;
-    onSignup: (email: string, pass: string) => boolean;
+    onLogin: (username: string, pass: string) => boolean;
+    onSignup: (username: string, pass: string) => boolean;
 }
 
 const Auth: React.FC<AuthProps> = ({ onLogin, onSignup }) => {
     const [isLogin, setIsLogin] = useState(true);
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const { t } = useLanguage();
@@ -21,10 +20,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onSignup }) => {
         setError('');
         let success = false;
         if (isLogin) {
-            success = onLogin(email, password);
+            success = onLogin(username, password);
             if (!success) setError(t('loginError'));
         } else {
-            success = onSignup(email, password);
+            success = onSignup(username, password);
             if (!success) setError(t('signupError'));
         }
     };
@@ -44,12 +43,12 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onSignup }) => {
                     <h2 className="text-2xl font-bold text-center mb-6">{isLogin ? t('loginTitle') : t('signupTitle')}</h2>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-dark-text-secondary mb-2">{t('emailLabel')}</label>
+                            <label htmlFor="username" className="block text-sm font-medium text-dark-text-secondary mb-2">{t('usernameLabel')}</label>
                             <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                id="username"
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 className="input-field w-full"
                                 required
                             />

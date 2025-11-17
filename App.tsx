@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Stopwatch from './components/Stopwatch';
 import MatchManagement from './components/MatchManagement';
@@ -24,7 +23,7 @@ type SavedGame = {
 }
 
 type User = {
-    email: string;
+    username: string;
     password?: string;
 }
 
@@ -34,7 +33,7 @@ const App: React.FC = () => {
 
   const getStorageKey = useCallback((baseKey: string) => {
     if (!currentUser) return null;
-    return `${baseKey}_${currentUser.email}`;
+    return `${baseKey}_${currentUser.username}`;
   }, [currentUser]);
 
 
@@ -123,12 +122,12 @@ const App: React.FC = () => {
     return () => { if (interval) window.clearInterval(interval); };
   }, [isRunning]);
 
-  const handleLogin = (email: string, pass: string) => {
+  const handleLogin = (username: string, pass: string) => {
     const usersJSON = localStorage.getItem('arbitro90_users');
     const users: User[] = usersJSON ? JSON.parse(usersJSON) : [];
-    const user = users.find(u => u.email === email && u.password === pass);
+    const user = users.find(u => u.username === username && u.password === pass);
     if (user) {
-        const userToSave = { email: user.email };
+        const userToSave = { username: user.username };
         localStorage.setItem('arbitro90_currentUser', JSON.stringify(userToSave));
         setCurrentUser(userToSave);
         return true;
@@ -136,16 +135,16 @@ const App: React.FC = () => {
     return false;
   };
 
-  const handleSignup = (email: string, pass: string) => {
-    if(!email || pass.length < 6) return false;
+  const handleSignup = (username: string, pass: string) => {
+    if(!username || pass.length < 6) return false;
     const usersJSON = localStorage.getItem('arbitro90_users');
     const users: User[] = usersJSON ? JSON.parse(usersJSON) : [];
-    if (users.some(u => u.email === email)) {
+    if (users.some(u => u.username === username)) {
         return false; // User already exists
     }
-    users.push({ email, password: pass });
+    users.push({ username, password: pass });
     localStorage.setItem('arbitro90_users', JSON.stringify(users));
-    return handleLogin(email, pass);
+    return handleLogin(username, pass);
   };
   
   const handleLogout = () => {
