@@ -44,3 +44,25 @@ export interface MatchState {
   teamB: Team;
   events: GameEvent[];
 }
+
+// Tournament Types
+export interface Matchup {
+    id: number;
+    teamA: { name: string; score: number | null };
+    teamB: { name: string; score: number | null };
+    // For winner
+    nextMatchupId: number | null;
+    winnerSlot?: 'A' | 'B';
+     // For loser (e.g., from semi-finals)
+    loserNextMatchupId?: number | null;
+    loserSlot?: 'A' | 'B';
+    gameSaveKey: string | null;
+}
+
+export interface Tournament {
+    // A map of round names to the matchups in that round.
+    // e.g., { "QUARTAS": [...], "SEMIFINAIS": [...] }
+    rounds: Record<string, Matchup[]>;
+    // Optional third place match
+    thirdPlace: Matchup | null;
+}
