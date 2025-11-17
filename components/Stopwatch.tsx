@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { PlayIcon, PauseIcon, RefreshIcon, PlusIcon } from './icons';
+import { useLanguage } from '../LanguageContext';
 
 interface StopwatchProps {
   time: number;
@@ -14,6 +16,7 @@ interface StopwatchProps {
 
 const Stopwatch: React.FC<StopwatchProps> = ({ time, totalTime, isRunning, onStart, onStop, onReset, onSetTotalTime, onAddTime }) => {
   const [extraTimeInput, setExtraTimeInput] = useState('');
+  const { t } = useLanguage();
 
   const formatTime = (timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
@@ -39,7 +42,7 @@ const Stopwatch: React.FC<StopwatchProps> = ({ time, totalTime, isRunning, onSta
       <div className="w-full max-w-md space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label htmlFor="total-time" className="block text-sm font-medium text-dark-text-secondary mb-1">Tempo Total (minutos)</label>
+            <label htmlFor="total-time" className="block text-sm font-medium text-dark-text-secondary mb-1">{t('totalTime')}</label>
             <input
               id="total-time"
               type="number"
@@ -47,21 +50,21 @@ const Stopwatch: React.FC<StopwatchProps> = ({ time, totalTime, isRunning, onSta
               onChange={(e) => onSetTotalTime(parseInt(e.target.value, 10) || 0)}
               disabled={time > 0}
               className="input-field w-full disabled:bg-dark-bg disabled:text-dark-text-secondary"
-              aria-label="Definir tempo total da partida em minutos"
+              aria-label={t('totalTime')}
             />
           </div>
           <div className="flex-1">
-             <label htmlFor="extra-time" className="block text-sm font-medium text-dark-text-secondary mb-1">Adicionar Acréscimo (minutos)</label>
+             <label htmlFor="extra-time" className="block text-sm font-medium text-dark-text-secondary mb-1">{t('addExtraTime')}</label>
             <div className="flex gap-2">
               <input
                 id="extra-time"
                 type="number"
                 value={extraTimeInput}
                 onChange={(e) => setExtraTimeInput(e.target.value)}
-                placeholder="Ex: 5"
+                placeholder={t('addExtraTimePlaceholder')}
                 className="input-field w-full"
               />
-              <button onClick={handleAddExtraTime} className="btn-icon bg-brand-blue hover:bg-blue-700 px-4" aria-label="Adicionar acréscimo">
+              <button onClick={handleAddExtraTime} className="btn-icon bg-brand-blue hover:bg-blue-700 px-4" aria-label={t('addExtraTimeButton')}>
                 <PlusIcon className="h-5 w-5" />
               </button>
             </div>
@@ -74,7 +77,7 @@ const Stopwatch: React.FC<StopwatchProps> = ({ time, totalTime, isRunning, onSta
           {formatTime(remainingTime)}
         </div>
         <div className="mt-2 text-xl text-dark-text-secondary font-mono">
-          Tempo corrido: {formatTime(time)}
+          {t('elapsedTime')}: {formatTime(time)}
         </div>
       </div>
 

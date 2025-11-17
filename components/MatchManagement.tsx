@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { MatchState, Player, Team, GameEventType, PlayerPosition } from '../types';
 import { PlusIcon, TrashIcon, SaveIcon } from './icons';
+import { useLanguage } from '../LanguageContext';
 
 interface MatchManagementProps {
   matchState: MatchState;
@@ -25,6 +27,7 @@ const TeamPanel: React.FC<{
   otherTeam: Team;
   substitutedPlayerIds: number[];
 }> = ({ team, teamId, onUpdateTeam, onAddEvent, onOpenSubModal, onRemoveGoal, onRemoveCard, substitutedPlayerIds }) => {
+  const { t } = useLanguage();
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerNumber, setNewPlayerNumber] = useState('');
   const [newPlayerPosition, setNewPlayerPosition] = useState<PlayerPosition>(PlayerPosition.Goalkeeper);
@@ -98,17 +101,17 @@ const TeamPanel: React.FC<{
           value={team.name}
           onChange={(e) => onUpdateTeam(teamId, { name: e.target.value })}
           className="bg-transparent text-xl font-bold text-dark-text w-full focus:outline-none"
-          placeholder="Nome do Time"
+          placeholder={t('teamNamePlaceholder')}
         />
       </div>
 
       <form onSubmit={handleAddPlayer} className="space-y-3 mb-4 p-3 bg-dark-surface rounded-md">
-        <h4 className="text-sm font-semibold text-dark-text">Adicionar Novo Jogador</h4>
+        <h4 className="text-sm font-semibold text-dark-text">{t('addNewPlayer')}</h4>
         <input 
           type="text" 
           value={newPlayerName} 
           onChange={(e) => setNewPlayerName(e.target.value)} 
-          placeholder="Nome do Jogador" 
+          placeholder={t('playerNamePlaceholder')}
           className="input-field w-full" 
           required
         />
@@ -117,17 +120,17 @@ const TeamPanel: React.FC<{
           onChange={(e) => setNewPlayerPosition(e.target.value as PlayerPosition)}
           className="input-field w-full"
         >
-          <option value={PlayerPosition.Goalkeeper}>Goleiro (G)</option>
-          <option value={PlayerPosition.Defender}>Defensor (D)</option>
-          <option value={PlayerPosition.Midfielder}>Meio-campista (M)</option>
-          <option value={PlayerPosition.Forward}>Atacante (A)</option>
+          <option value={PlayerPosition.Goalkeeper}>{t('goalkeeper')}</option>
+          <option value={PlayerPosition.Defender}>{t('defender')}</option>
+          <option value={PlayerPosition.Midfielder}>{t('midfielder')}</option>
+          <option value={PlayerPosition.Forward}>{t('forward')}</option>
         </select>
         <div className="flex gap-2">
           <input 
             type="number" 
             value={newPlayerNumber} 
             onChange={(e) => setNewPlayerNumber(e.target.value)} 
-            placeholder="Nº" 
+            placeholder={t('playerNumberPlaceholder')}
             className="input-field w-1/2" 
             required
           />
@@ -135,7 +138,7 @@ const TeamPanel: React.FC<{
             type="number" 
             value={newPlayerYellowCards} 
             onChange={(e) => setNewPlayerYellowCards(e.target.value)} 
-            placeholder="Amarelos" 
+            placeholder={t('yellowCardsPlaceholder')}
             className="input-field w-1/2" 
             min="0"
             max="2"
@@ -149,23 +152,24 @@ const TeamPanel: React.FC<{
             onChange={(e) => setNewPlayerHasRedCard(e.target.checked)}
             className="w-4 h-4 bg-dark-bg border-gray-600 rounded text-brand-red focus:ring-brand-red"
           />
-          <label htmlFor={`redCardCheck-${teamId}`}>Recebeu cartão vermelho direto?</label>
+          <label htmlFor={`redCardCheck-${teamId}`}>{t('directRedCard')}</label>
         </div>
         <button 
           type="submit" 
           className="w-full flex items-center justify-center gap-2 btn-icon bg-brand-blue hover:bg-blue-700"
         >
-          <PlusIcon /> Adicionar Jogador
+          <PlusIcon /> {t('addPlayerButton')}
         </button>
       </form>
       
       <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+        <h3 className="text-dark-text-secondary pt-4 border-t border-dark-surface mt-4">{t('starters')}</h3>
         {sortedStarters.map(player => (
-          <PlayerRow key={player.id} player={player} onRemove={handleRemovePlayer} onEvent={(type) => onAddEvent(type, teamId, player)} onSubstitute={() => onOpenSubModal(teamId, player)} onRemoveCard={(cardType) => onRemoveCard(teamId, player, cardType)} onRemoveGoal={() => onRemoveGoal(teamId, player)} isHighlighted={substitutedPlayerIds.includes(player.id)} />
+          <PlayerRow key={player.id} player={player} onRemove={handleRemovePlayer} onEvent={(type) => onAddEvent(type, teamId, player)} onSubstitute={() => onOpenSubModal(teamId, player)} onRemoveCard={(cardType) => onRemoveCard(teamId, player, cardType)} onRemoveGoal={() => onRemoveGoal(teamId, player)} isHighlighted={substitutedPlayerIds.includes(player.id)} t={t} />
         ))}
-        <h3 className="text-dark-text-secondary pt-4 border-t border-dark-surface mt-4">Reservas</h3>
+        <h3 className="text-dark-text-secondary pt-4 border-t border-dark-surface mt-4">{t('reserves')}</h3>
         {sortedReserves.map(player => (
-           <PlayerRow key={player.id} player={player} onRemove={handleRemovePlayer} onEvent={(type) => onAddEvent(type, teamId, player)} onSubstitute={() => {}} onRemoveCard={(cardType) => onRemoveCard(teamId, player, cardType)} onRemoveGoal={() => onRemoveGoal(teamId, player)} isSubstitute isHighlighted={substitutedPlayerIds.includes(player.id)} />
+           <PlayerRow key={player.id} player={player} onRemove={handleRemovePlayer} onEvent={(type) => onAddEvent(type, teamId, player)} onSubstitute={() => {}} onRemoveCard={(cardType) => onRemoveCard(teamId, player, cardType)} onRemoveGoal={() => onRemoveGoal(teamId, player)} isSubstitute isHighlighted={substitutedPlayerIds.includes(player.id)} t={t}/>
         ))}
       </div>
     </div>
@@ -175,26 +179,27 @@ const TeamPanel: React.FC<{
 interface ActionButtonsProps {
     onEvent: (type: GameEventType) => void;
     isDisabled: boolean;
+    t: (key: string) => string;
 }
 
-const StarterActionButtons: React.FC<ActionButtonsProps & { onSubstitute: () => void; }> = ({ onEvent, onSubstitute, isDisabled }) => (
+const StarterActionButtons: React.FC<ActionButtonsProps & { onSubstitute: () => void; }> = ({ onEvent, onSubstitute, isDisabled, t }) => (
     <>
-        <button onClick={() => onEvent(GameEventType.Goal)} disabled={isDisabled} className="btn-action bg-brand-green hover:bg-green-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed">GOL</button>
-        <button onClick={() => onEvent(GameEventType.YellowCard)} disabled={isDisabled} className="btn-action bg-brand-yellow hover:bg-yellow-600 text-xs disabled:opacity-50 disabled:cursor-not-allowed">A</button>
-        <button onClick={() => onEvent(GameEventType.RedCard)} disabled={isDisabled} className="btn-action bg-brand-red hover:bg-red-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed">V</button>
-        <button onClick={onSubstitute} disabled={isDisabled} className="btn-action bg-gray-500 hover:bg-gray-600 text-xs disabled:opacity-50 disabled:cursor-not-allowed">SUB</button>
+        <button onClick={() => onEvent(GameEventType.Goal)} disabled={isDisabled} className="btn-action bg-brand-green hover:bg-green-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed">{t('goal')}</button>
+        <button onClick={() => onEvent(GameEventType.YellowCard)} disabled={isDisabled} className="btn-action bg-brand-yellow hover:bg-yellow-600 text-xs disabled:opacity-50 disabled:cursor-not-allowed">{t('yellowCardShort')}</button>
+        <button onClick={() => onEvent(GameEventType.RedCard)} disabled={isDisabled} className="btn-action bg-brand-red hover:bg-red-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed">{t('redCardShort')}</button>
+        <button onClick={onSubstitute} disabled={isDisabled} className="btn-action bg-gray-500 hover:bg-gray-600 text-xs disabled:opacity-50 disabled:cursor-not-allowed">{t('substituteShort')}</button>
     </>
 );
 
-const ReserveActionButtons: React.FC<ActionButtonsProps> = ({ onEvent, isDisabled }) => (
+const ReserveActionButtons: React.FC<ActionButtonsProps> = ({ onEvent, isDisabled, t }) => (
     <>
-        <button onClick={() => onEvent(GameEventType.YellowCard)} disabled={isDisabled} className="btn-action bg-brand-yellow hover:bg-yellow-600 text-xs disabled:opacity-50 disabled:cursor-not-allowed">A</button>
-        <button onClick={() => onEvent(GameEventType.RedCard)} disabled={isDisabled} className="btn-action bg-brand-red hover:bg-red-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed">V</button>
+        <button onClick={() => onEvent(GameEventType.YellowCard)} disabled={isDisabled} className="btn-action bg-brand-yellow hover:bg-yellow-600 text-xs disabled:opacity-50 disabled:cursor-not-allowed">{t('yellowCardShort')}</button>
+        <button onClick={() => onEvent(GameEventType.RedCard)} disabled={isDisabled} className="btn-action bg-brand-red hover:bg-red-700 text-xs disabled:opacity-50 disabled:cursor-not-allowed">{t('redCardShort')}</button>
     </>
 );
 
 
-const PlayerRow: React.FC<{ player: Player; onRemove: (id: number) => void; onEvent: (type: GameEventType) => void; onSubstitute: () => void; onRemoveCard: (cardType: 'yellow' | 'red') => void; onRemoveGoal: () => void; isSubstitute?: boolean; isHighlighted?: boolean; }> = ({ player, onRemove, onEvent, onSubstitute, onRemoveCard, onRemoveGoal, isSubstitute = false, isHighlighted = false }) => {
+const PlayerRow: React.FC<{ player: Player; onRemove: (id: number) => void; onEvent: (type: GameEventType) => void; onSubstitute: () => void; onRemoveCard: (cardType: 'yellow' | 'red') => void; onRemoveGoal: () => void; isSubstitute?: boolean; isHighlighted?: boolean; t: (key: string) => string; }> = ({ player, onRemove, onEvent, onSubstitute, onRemoveCard, onRemoveGoal, isSubstitute = false, isHighlighted = false, t }) => {
   const isDisabled = player.redCard;
   
   return (
@@ -204,16 +209,16 @@ const PlayerRow: React.FC<{ player: Player; onRemove: (id: number) => void; onEv
       <span className="flex-grow text-dark-text-secondary">{player.name}</span>
       <div className="flex items-center gap-1">
         {Array(player.goals || 0).fill(0).map((_, i) => (
-            <div key={`goal-${i}`} onClick={onRemoveGoal} className="w-3 h-3 bg-white rounded-full cursor-pointer hover:opacity-75" title="Remover Gol" />
+            <div key={`goal-${i}`} onClick={onRemoveGoal} className="w-3 h-3 bg-white rounded-full cursor-pointer hover:opacity-75" title={t('removeGoal')} />
         ))}
-        {Array(player.yellowCards).fill(0).map((_, i) => <div key={`yellow-${i}`} onClick={() => onRemoveCard('yellow')} className="w-2 h-3 bg-brand-yellow cursor-pointer hover:opacity-75" title="Remover Cartão Amarelo" />)}
-        {player.redCard && <div onClick={() => onRemoveCard('red')} className="w-2 h-3 bg-brand-red cursor-pointer hover:opacity-75" title="Remover Cartão Vermelho" />}
+        {Array(player.yellowCards).fill(0).map((_, i) => <div key={`yellow-${i}`} onClick={() => onRemoveCard('yellow')} className="w-2 h-3 bg-brand-yellow cursor-pointer hover:opacity-75" title={t('removeYellowCard')} />)}
+        {player.redCard && <div onClick={() => onRemoveCard('red')} className="w-2 h-3 bg-brand-red cursor-pointer hover:opacity-75" title={t('removeRedCard')} />}
       </div>
       <div className="flex items-center gap-1">
         {!isSubstitute ? (
-           <StarterActionButtons onEvent={onEvent} onSubstitute={onSubstitute} isDisabled={isDisabled} />
+           <StarterActionButtons onEvent={onEvent} onSubstitute={onSubstitute} isDisabled={isDisabled} t={t} />
         ) : (
-           <ReserveActionButtons onEvent={onEvent} isDisabled={isDisabled} />
+           <ReserveActionButtons onEvent={onEvent} isDisabled={isDisabled} t={t} />
         )}
         <button onClick={() => onRemove(player.id)} className="btn-icon bg-brand-red hover:bg-red-700"><TrashIcon className="h-4 w-4" /></button>
       </div>
@@ -234,6 +239,7 @@ const MatchManagement: React.FC<MatchManagementProps> = ({
     matchState, setMatchState, currentTime, onSaveGame, onNewGame,
     savedGamesList, selectedGame, onLoadGame, onOpenDeleteModal 
 }) => {
+  const { t } = useLanguage();
   const [subModal, setSubModal] = useState<{ teamId: 'A'|'B', playerOut: Player } | null>(null);
   const [selectedPlayerIn, setSelectedPlayerIn] = useState<string>('');
   const [substitutedPlayerIds, setSubstitutedPlayerIds] = useState<number[]>([]);
@@ -481,12 +487,12 @@ const MatchManagement: React.FC<MatchManagementProps> = ({
 
       <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
         <div className="flex items-center gap-2">
-            <label htmlFor="saved-games" className="text-sm font-medium text-dark-text-secondary">Jogos Salvos:</label>
+            <label htmlFor="saved-games" className="text-sm font-medium text-dark-text-secondary">{t('savedGames')}:</label>
             <select id="saved-games" value={selectedGame} onChange={(e) => onLoadGame(e.target.value)} className="input-field-header">
-                <option value="" disabled>Carregar um jogo</option>
+                <option value="" disabled>{t('loadGame')}</option>
                 {savedGamesList.map(g => (<option key={g.name} value={g.name}>{g.name}</option>))}
             </select>
-            <button onClick={onOpenDeleteModal} disabled={!selectedGame} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title="Apagar jogo selecionado">
+            <button onClick={onOpenDeleteModal} disabled={!selectedGame} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title={t('deleteSelectedGame')}>
                 <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
             </button>
         </div>
@@ -496,11 +502,11 @@ const MatchManagement: React.FC<MatchManagementProps> = ({
         <div className="flex items-center gap-2">
             <button onClick={onSaveGame} className="btn-primary bg-brand-blue hover:bg-blue-700 flex items-center gap-2">
                 <SaveIcon className="h-4 w-4" />
-                Salvar Jogo
+                {t('saveGame')}
             </button>
             <button onClick={onNewGame} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center gap-2">
                 <PlusIcon className="h-4 w-4" />
-                Novo Jogo
+                {t('newGame')}
             </button>
          </div>
       </div>
@@ -513,18 +519,18 @@ const MatchManagement: React.FC<MatchManagementProps> = ({
       {subModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setSubModal(null)}>
           <div className="bg-dark-card p-6 rounded-lg w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-4">Realizar Substituição</h3>
-            <p className="mb-1 text-sm text-dark-text-secondary">Sai:</p>
+            <h3 className="text-lg font-bold mb-4">{t('substitutionModalTitle')}</h3>
+            <p className="mb-1 text-sm text-dark-text-secondary">{t('playerOut')}:</p>
             <p className="mb-4 font-semibold text-dark-text">{`#${subModal.playerOut.number} ${subModal.playerOut.name}`}</p>
             
-            <label htmlFor="playerIn" className="block mb-1 text-sm text-dark-text-secondary">Entra:</label>
+            <label htmlFor="playerIn" className="block mb-1 text-sm text-dark-text-secondary">{t('playerIn')}:</label>
             <select 
               id="playerIn"
               value={selectedPlayerIn}
               onChange={(e) => setSelectedPlayerIn(e.target.value)}
               className="input-field w-full mb-6"
             >
-              <option value="" disabled>Selecione um jogador reserva</option>
+              <option value="" disabled>{t('selectReservePlayer')}</option>
               {reserves.map(p => (
                 <option key={p.id} value={p.id}>
                   {`#${p.number} ${p.name}`}
@@ -537,14 +543,14 @@ const MatchManagement: React.FC<MatchManagementProps> = ({
                 onClick={() => setSubModal(null)}
                 className="px-4 py-2 rounded-md bg-dark-surface hover:bg-gray-700 text-dark-text transition-colors"
               >
-                Cancelar
+                {t('cancel')}
               </button>
               <button 
                 onClick={handleConfirmSubstitution}
                 disabled={!selectedPlayerIn}
                 className="px-4 py-2 rounded-md bg-brand-blue hover:bg-blue-700 text-white transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
-                Confirmar
+                {t('confirm')}
               </button>
             </div>
           </div>

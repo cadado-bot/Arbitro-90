@@ -1,7 +1,9 @@
 
+
 import React, { useState } from 'react';
 import { MatchState, GameEventType, GameEvent, Team } from '../types';
 import { DownloadIcon, TrashIcon, AlertTriangleIcon } from './icons';
+import { useLanguage } from '../LanguageContext';
 
 declare var jspdf: any;
 
@@ -21,23 +23,31 @@ const StatCard: React.FC<{ title: string; teamAValue: string | number; teamBValu
   </div>
 );
 
-const EventRow: React.FC<{ event: GameEvent }> = ({ event }) => {
+const EventRow: React.FC<{ event: GameEvent, t: (key: string) => string }> = ({ event, t }) => {
     let icon = '⚽';
     let color = 'text-brand-green';
+    let eventName = event.type;
+    let details = event.playerName;
 
     switch(event.type) {
         case GameEventType.YellowCard:
             icon = '🟨';
             color = 'text-brand-yellow';
+            eventName = t('yellowCards');
             break;
         case GameEventType.RedCard:
             icon = '🟥';
             color = 'text-brand-red';
+            eventName = t('redCards');
             break;
         case GameEventType.Substitution:
             icon = '🔄';
             color = 'text-brand-blue';
+            eventName = t('substitutions');
+            details = t('subEvent').replace('{relatedPlayerName}', event.relatedPlayerName!).replace('{playerName}', event.playerName);
             break;
+        default:
+             eventName = t('goals');
     }
 
     return (
@@ -45,11 +55,9 @@ const EventRow: React.FC<{ event: GameEvent }> = ({ event }) => {
             <span className="font-mono text-dark-text-secondary">{event.time}</span>
             <span className={`text-2xl ${color}`}>{icon}</span>
             <div className="flex-grow">
-                <p className="font-semibold text-dark-text">{event.type}</p>
+                <p className="font-semibold text-dark-text">{eventName}</p>
                 <p className="text-sm text-dark-text-secondary">
-                    {event.teamName} - {event.type === GameEventType.Substitution ? 
-                    `Sai: ${event.relatedPlayerName}, Entra: ${event.playerName}` : 
-                    event.playerName}
+                    {event.teamName} - {details}
                 </p>
             </div>
         </div>
@@ -59,6 +67,7 @@ const EventRow: React.FC<{ event: GameEvent }> = ({ event }) => {
 const Dashboard: React.FC<DashboardProps> = ({ matchState, onClearReport }) => {
   const { teamA, teamB, events } = matchState;
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const { t } = useLanguage();
 
   const getCardCount = (team: Team, cardType: 'yellow' | 'red') => {
     if (cardType === 'yellow') {
@@ -85,13 +94,13 @@ const Dashboard: React.FC<DashboardProps> = ({ matchState, onClearReport }) => {
     
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('RELATÓRIO DA PARTIDA', doc.internal.pageSize.width / 2, y, { align: 'center' });
+    doc.text(t('matchReport'), doc.internal.pageSize.width / 2, y, { align: 'center' });
     y += lineHeight * 2;
     
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
-    const finalScore = `Resultado Final: ${teamA.name} ${teamA.score} - ${teamB.score} ${teamB.name}`;
-    doc.text(finalScore, doc.internal.pageSize.width / 2, y, { align: 'center' });
+    const finalScoreText = `${t('finalScore')}: ${teamA.name} ${teamA.score} - ${teamB.score} ${teamB.name}`;
+    doc.text(finalScoreText, doc.internal.pageSize.width / 2, y, { align: 'center' });
     y += lineHeight * 3;
 
     const addTeamSection = (team: Team) => {
@@ -101,45 +110,45 @@ const Dashboard: React.FC<DashboardProps> = ({ matchState, onClearReport }) => {
         doc.text(`--- ${team.name.toUpperCase()} ---`, margin, y);
         y += lineHeight * 2;
         
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        
-        const addEventCategory = (title: string, type: GameEventType) => {
+        const addEventCategory = (titleKey: string, type: GameEventType) => {
             checkPageBreak();
-            doc.text(title, margin, y);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(t(titleKey), margin, y);
             y += lineHeight;
             doc.setFont('helvetica', 'normal');
             const teamEvents = events.filter(e => e.type === type && e.teamName === team.name);
             if (teamEvents.length === 0) {
-                doc.text('  Nenhum', margin, y);
+                doc.text(`  ${t('noSubstitutions')}`, margin, y);
                 y += lineHeight;
             } else {
                 teamEvents.forEach(e => {
                     checkPageBreak();
-                    doc.text(`  - ${e.playerName} aos ${e.time}`, margin, y);
+                    doc.text(`  - ${e.playerName} at ${e.time}`, margin, y);
                     y += lineHeight;
                 });
             }
-            y += lineHeight; // Extra space after category
+            y += lineHeight;
         };
 
-        addEventCategory('Gols:', GameEventType.Goal);
-        addEventCategory('Cartões Amarelos:', GameEventType.YellowCard);
-        addEventCategory('Cartões Vermelhos:', GameEventType.RedCard);
+        addEventCategory('goals', GameEventType.Goal);
+        addEventCategory('yellowCards', GameEventType.YellowCard);
+        addEventCategory('redCards', GameEventType.RedCard);
         
         checkPageBreak();
         doc.setFont('helvetica', 'bold');
-        doc.text('Substituições:', margin, y);
+        doc.text(t('substitutions'), margin, y);
         y += lineHeight;
         doc.setFont('helvetica', 'normal');
         const subs = events.filter(e => e.type === GameEventType.Substitution && e.teamName === team.name);
          if (subs.length === 0) {
-            doc.text('  Nenhuma', margin, y);
+            doc.text(`  ${t('noSubstitutions')}`, margin, y);
             y += lineHeight;
         } else {
             subs.forEach(e => {
                 checkPageBreak();
-                doc.text(`  - Sai: ${e.relatedPlayerName}, Entra: ${e.playerName} aos ${e.time}`, margin, y);
+                const subText = t('subEvent').replace('{relatedPlayerName}', e.relatedPlayerName!).replace('{playerName}', e.playerName);
+                doc.text(`  - ${subText} at ${e.time}`, margin, y);
                 y += lineHeight;
             });
         }
@@ -152,7 +161,7 @@ const Dashboard: React.FC<DashboardProps> = ({ matchState, onClearReport }) => {
     checkPageBreak();
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('--- LINHA DO TEMPO COMPLETA ---', margin, y);
+    doc.text(`--- ${t('matchTimeline').toUpperCase()} ---`, margin, y);
     y += lineHeight * 2;
     
     doc.setFontSize(8);
@@ -161,13 +170,13 @@ const Dashboard: React.FC<DashboardProps> = ({ matchState, onClearReport }) => {
         checkPageBreak();
         let eventString = `${e.time} | ${e.teamName} | ${e.type}: ${e.playerName}`;
         if (e.type === GameEventType.Substitution) {
-            eventString = `${e.time} | ${e.teamName} | ${e.type}: Sai ${e.relatedPlayerName}, Entra ${e.playerName}`;
+            eventString = `${e.time} | ${e.teamName} | ${e.type}: ${t('subEvent').replace('{relatedPlayerName}', e.relatedPlayerName!).replace('{playerName}', e.playerName)}`;
         }
         doc.text(eventString, margin, y);
         y += 5;
     });
 
-    doc.save(`relatorio_partida_${teamA.name.replace(' ', '_')}_vs_${teamB.name.replace(' ', '_')}.pdf`);
+    doc.save(`report_${teamA.name.replace(' ', '_')}_vs_${teamB.name.replace(' ', '_')}.pdf`);
   };
 
 
@@ -200,30 +209,30 @@ const Dashboard: React.FC<DashboardProps> = ({ matchState, onClearReport }) => {
       </header>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard title="Gols" teamAValue={teamA.score} teamBValue={teamB.score} />
-        <StatCard title="Cartões Amarelos" teamAValue={getCardCount(teamA, 'yellow')} teamBValue={getCardCount(teamB, 'yellow')} />
-        <StatCard title="Cartões Vermelhos" teamAValue={getCardCount(teamA, 'red')} teamBValue={getCardCount(teamB, 'red')} />
+        <StatCard title={t('goals')} teamAValue={teamA.score} teamBValue={teamB.score} />
+        <StatCard title={t('yellowCards')} teamAValue={getCardCount(teamA, 'yellow')} teamBValue={getCardCount(teamB, 'yellow')} />
+        <StatCard title={t('redCards')} teamAValue={getCardCount(teamA, 'red')} teamBValue={getCardCount(teamB, 'red')} />
       </div>
 
       <div className="bg-dark-card p-6 rounded-lg">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-dark-surface pb-2 gap-4">
-            <h3 className="text-xl font-bold">Linha do Tempo da Partida</h3>
+            <h3 className="text-xl font-bold">{t('matchTimeline')}</h3>
             <div className="flex gap-3">
                 <button onClick={handleSaveReport} className="btn-action bg-brand-blue hover:bg-blue-700 flex items-center gap-2">
                     <DownloadIcon className="h-4 w-4" />
-                    Salvar Relatório
+                    {t('saveReport')}
                 </button>
                 <button onClick={() => setIsClearModalOpen(true)} className="btn-action bg-brand-red hover:bg-red-700 flex items-center gap-2">
                     <TrashIcon className="h-4 w-4" />
-                    Limpar Relatório
+                    {t('clearReport')}
                 </button>
             </div>
         </div>
         <div className="max-h-96 overflow-y-auto pr-2">
             {events.length > 0 ? (
-                events.map(event => <EventRow key={event.id} event={event} />)
+                events.map(event => <EventRow key={event.id} event={event} t={t} />)
             ) : (
-                <p className="text-dark-text-secondary text-center py-8">Nenhum evento registrado ainda.</p>
+                <p className="text-dark-text-secondary text-center py-8">{t('noEvents')}</p>
             )}
         </div>
       </div>
@@ -234,16 +243,16 @@ const Dashboard: React.FC<DashboardProps> = ({ matchState, onClearReport }) => {
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-900/50 mb-4">
                     <AlertTriangleIcon className="h-6 w-6 text-brand-red" />
                 </div>
-                <h3 className="text-lg font-bold mb-2">Limpar Dados da Partida?</h3>
+                <h3 className="text-lg font-bold mb-2">{t('clearMatchDataTitle')}</h3>
                 <p className="text-sm text-dark-text-secondary mb-6">
-                    Esta ação é irreversível. Todos os gols, cartões, substituições e o tempo do cronômetro serão zerados.
+                    {t('clearMatchDataBody')}
                 </p>
                 <div className="flex justify-center gap-4">
                     <button
                         onClick={() => setIsClearModalOpen(false)}
                         className="px-6 py-2 rounded-md bg-dark-surface hover:bg-gray-700 text-dark-text transition-colors w-full"
                     >
-                        Cancelar
+                        {t('cancel')}
                     </button>
                     <button
                         onClick={() => {
@@ -252,7 +261,7 @@ const Dashboard: React.FC<DashboardProps> = ({ matchState, onClearReport }) => {
                         }}
                         className="px-6 py-2 rounded-md bg-brand-red hover:bg-red-700 text-white transition-colors w-full"
                     >
-                        Confirmar Limpeza
+                        {t('confirmClear')}
                     </button>
                 </div>
             </div>

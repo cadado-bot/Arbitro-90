@@ -1,6 +1,9 @@
+
 import React, { useState } from 'react';
 import { League, LeagueMatchup, Team } from '../types';
 import { PlusIcon, SaveIcon, TrashIcon, UsersIcon } from './icons';
+import { useLanguage } from '../LanguageContext';
+
 
 interface LeagueProps {
     league: League | null;
@@ -16,7 +19,7 @@ interface LeagueProps {
     registeredTeams: Team[];
 }
 
-const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: string[], leagueName: string) => void; registeredTeams: Team[] }> = ({ onClose, onCreate, registeredTeams }) => {
+const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: string[], leagueName: string) => void; registeredTeams: Team[]; t: (key: string) => string; }> = ({ onClose, onCreate, registeredTeams, t }) => {
     const [numTeams, setNumTeams] = useState(4);
     const [teamNames, setTeamNames] = useState<string[]>(Array(4).fill(''));
     const [leagueName, setLeagueName] = useState('');
@@ -46,23 +49,23 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="bg-dark-card p-6 rounded-lg w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                <h3 className="text-lg font-bold mb-4">Criar Nova Liga</h3>
+                <h3 className="text-lg font-bold mb-4">{t('createNewLeague')}</h3>
                 <datalist id={teamDatalistId}>
                     {registeredTeams.map(team => <option key={team.id || team.name} value={team.name} />)}
                 </datalist>
                 {step === 1 ? (
                     <div>
-                        <label htmlFor="leagueName" className="block text-sm text-dark-text-secondary mb-2">Nome do Campeonato</label>
+                        <label htmlFor="leagueName" className="block text-sm text-dark-text-secondary mb-2">{t('leagueName')}</label>
                         <input
                             id="leagueName"
                             type="text"
                             value={leagueName}
                             onChange={(e) => setLeagueName(e.target.value)}
                             className="input-field w-full mb-4"
-                            placeholder="Ex: Brasileirão Série A"
+                            placeholder={t('leagueNamePlaceholder')}
                             required
                         />
-                        <label htmlFor="numTeams" className="block text-sm text-dark-text-secondary mb-2">Quantos times participarão?</label>
+                        <label htmlFor="numTeams" className="block text-sm text-dark-text-secondary mb-2">{t('howManyTeams')}</label>
                         <select
                             id="numTeams"
                             value={numTeams}
@@ -74,13 +77,13 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
                             ))}
                         </select>
                         <div className="flex justify-end gap-3 pt-4">
-                            <button type="button" onClick={onClose} className="px-4 py-2 rounded-md bg-dark-surface hover:bg-gray-700 text-dark-text transition-colors">Cancelar</button>
-                            <button onClick={() => setStep(2)} disabled={!leagueName.trim()} className="px-4 py-2 rounded-md bg-brand-blue hover:bg-blue-700 text-white transition-colors disabled:opacity-50">Próximo</button>
+                            <button type="button" onClick={onClose} className="px-4 py-2 rounded-md bg-dark-surface hover:bg-gray-700 text-dark-text transition-colors">{t('cancel')}</button>
+                            <button onClick={() => setStep(2)} disabled={!leagueName.trim()} className="px-4 py-2 rounded-md bg-brand-blue hover:bg-blue-700 text-white transition-colors disabled:opacity-50">{t('next')}</button>
                         </div>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-3">
-                        <p className="text-sm text-dark-text-secondary pb-2">Insira os nomes dos {numTeams} times.</p>
+                        <p className="text-sm text-dark-text-secondary pb-2">{t('insertTeamNamesLeague').replace('{count}', String(numTeams))}</p>
                         <div className={`grid ${numTeams > 8 ? 'grid-cols-2' : 'grid-cols-1'} gap-3 max-h-60 overflow-y-auto pr-2`}>
                             {teamNames.map((name, index) => (
                                 <input
@@ -88,7 +91,7 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
                                     type="text"
                                     value={name}
                                     onChange={(e) => handleNameChange(index, e.target.value)}
-                                    placeholder={`Time ${index + 1}`}
+                                    placeholder={t('teamPlaceholder').replace('{index}', String(index + 1))}
                                     className="input-field w-full"
                                     list={teamDatalistId}
                                     required
@@ -96,8 +99,8 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
                             ))}
                         </div>
                         <div className="flex justify-end gap-3 pt-4">
-                             <button type="button" onClick={() => setStep(1)} className="px-4 py-2 rounded-md bg-dark-surface hover:bg-gray-700 text-dark-text transition-colors">Voltar</button>
-                            <button type="submit" className="px-4 py-2 rounded-md bg-brand-blue hover:bg-blue-700 text-white transition-colors">Criar Liga</button>
+                             <button type="button" onClick={() => setStep(1)} className="px-4 py-2 rounded-md bg-dark-surface hover:bg-gray-700 text-dark-text transition-colors">{t('back')}</button>
+                            <button type="submit" className="px-4 py-2 rounded-md bg-brand-blue hover:bg-blue-700 text-white transition-colors">{t('createLeague')}</button>
                         </div>
                     </form>
                 )}
@@ -108,6 +111,7 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
 
 
 const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onManageMatch, onSaveLeague, onNewLeague, savedLeagues, selectedLeagueName, onLoadLeague, onOpenDeleteLeagueModal, onOpenTeamRegistry, registeredTeams }) => {
+    const { t } = useLanguage();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
 
@@ -120,33 +124,33 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
     if (!league) {
         return (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                <h2 className="text-2xl font-bold text-dark-text mb-2">Nenhuma liga selecionada.</h2>
-                <p className="text-dark-text-secondary mb-6">Crie uma nova liga ou carregue uma existente.</p>
+                <h2 className="text-2xl font-bold text-dark-text mb-2">{t('noLeague')}</h2>
+                <p className="text-dark-text-secondary mb-6">{t('createOrLoadLeague')}</p>
                  <div className="flex flex-col items-center gap-4 mb-6 w-full max-w-md">
                     <div className="flex items-center gap-2">
-                        <label htmlFor="saved-leagues" className="text-sm font-medium text-dark-text-secondary">Ligas Salvas:</label>
+                        <label htmlFor="saved-leagues" className="text-sm font-medium text-dark-text-secondary">{t('savedLeagues')}:</label>
                         <select id="saved-leagues" value={selectedLeagueName} onChange={(e) => onLoadLeague(e.target.value)} className="input-field-header">
-                            <option value="" disabled>Carregar uma liga</option>
+                            <option value="" disabled>{t('loadLeague')}</option>
                             {savedLeagues.map(l => (<option key={l.name} value={l.name}>{l.name}</option>))}
                         </select>
-                        <button onClick={onOpenDeleteLeagueModal} disabled={!selectedLeagueName} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title="Apagar liga selecionada">
+                        <button onClick={onOpenDeleteLeagueModal} disabled={!selectedLeagueName} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title={t('deleteSelectedLeague')}>
                             <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
                         </button>
                     </div>
                     <button onClick={onOpenTeamRegistry} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center justify-center gap-2 w-full">
                         <UsersIcon className="h-5 w-5" />
-                        Gerenciar Times Registrados
+                        {t('manageRegisteredTeams')}
                     </button>
                 </div>
-                 <p className="text-dark-text-secondary mb-4">Ou crie uma nova:</p>
+                 <p className="text-dark-text-secondary mb-4">{t('orCreateNew')}</p>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
                     className="btn-primary bg-brand-green hover:bg-green-700 flex items-center justify-center gap-2 px-6 py-3 text-lg"
                 >
                     <PlusIcon className="h-6 w-6" />
-                    Criar Nova Liga
+                    {t('createNewLeague')}
                 </button>
-                {isCreateModalOpen && <CreateLeagueModal onCreate={onCreateLeague} onClose={() => setIsCreateModalOpen(false)} registeredTeams={registeredTeams} />}
+                {isCreateModalOpen && <CreateLeagueModal onCreate={onCreateLeague} onClose={() => setIsCreateModalOpen(false)} registeredTeams={registeredTeams} t={t} />}
                  <style>{`.input-field { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 8px 12px; border-radius: 6px; } .input-field-header { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-size: 0.875rem; } .btn-primary { padding: 6px 10px; font-weight: 600; color: white; border-radius: 6px; transition: background-color 0.2s; }`}</style>
             </div>
         );
@@ -170,12 +174,12 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
             `}</style>
             <div className="flex justify-between items-center mb-4 flex-wrap gap-4 border-b border-dark-surface pb-4">
                 <div className="flex items-center gap-2">
-                    <label htmlFor="saved-leagues" className="text-sm font-medium text-dark-text-secondary">Ligas Salvas:</label>
+                    <label htmlFor="saved-leagues" className="text-sm font-medium text-dark-text-secondary">{t('savedLeagues')}:</label>
                     <select id="saved-leagues" value={selectedLeagueName} onChange={(e) => onLoadLeague(e.target.value)} className="input-field-header">
-                        <option value="" disabled>Carregar uma liga</option>
+                        <option value="" disabled>{t('loadLeague')}</option>
                         {savedLeagues.map(l => (<option key={l.name} value={l.name}>{l.name}</option>))}
                     </select>
-                    <button onClick={onOpenDeleteLeagueModal} disabled={!selectedLeagueName} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title="Apagar liga selecionada">
+                    <button onClick={onOpenDeleteLeagueModal} disabled={!selectedLeagueName} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title={t('deleteSelectedLeague')}>
                         <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
                     </button>
                 </div>
@@ -183,11 +187,11 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
                  <div className="flex items-center gap-2">
                     <button onClick={onNewLeague} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center gap-2">
                         <PlusIcon className="h-4 w-4" />
-                        Nova Liga
+                        {t('newLeague')}
                     </button>
                     <button onClick={handleSave} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
                         <SaveIcon className="h-4 w-4" />
-                        Salvar Liga
+                        {t('saveLeague')}
                     </button>
                  </div>
             </div>
@@ -198,15 +202,15 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
                             <thead>
                                 <tr>
                                     <th className="table-header text-center">#</th>
-                                    <th className="table-header">Time</th>
-                                    <th className="table-header text-center" title="Pontos">P</th>
-                                    <th className="table-header text-center" title="Jogos">J</th>
-                                    <th className="table-header text-center" title="Vitórias">V</th>
-                                    <th className="table-header text-center" title="Empates">E</th>
-                                    <th className="table-header text-center" title="Derrotas">D</th>
-                                    <th className="table-header text-center" title="Gols Pró">GP</th>
-                                    <th className="table-header text-center" title="Gols Contra">GC</th>
-                                    <th className="table-header text-center" title="Saldo de Gols">SG</th>
+                                    <th className="table-header">{t('tableHeaderTeam')}</th>
+                                    <th className="table-header text-center" title={t('tableHeaderPoints')}>{t('tableHeaderPoints')}</th>
+                                    <th className="table-header text-center" title={t('tableHeaderPlayed')}>{t('tableHeaderPlayed')}</th>
+                                    <th className="table-header text-center" title={t('tableHeaderWins')}>{t('tableHeaderWins')}</th>
+                                    <th className="table-header text-center" title={t('tableHeaderDraws')}>{t('tableHeaderDraws')}</th>
+                                    <th className="table-header text-center" title={t('tableHeaderLosses')}>{t('tableHeaderLosses')}</th>
+                                    <th className="table-header text-center" title={t('tableHeaderGF')}>{t('tableHeaderGF')}</th>
+                                    <th className="table-header text-center" title={t('tableHeaderGA')}>{t('tableHeaderGA')}</th>
+                                    <th className="table-header text-center" title={t('tableHeaderGD')}>{t('tableHeaderGD')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -229,11 +233,11 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
                     </div>
                 </div>
                 <div className="lg:w-1/3">
-                    <h3 className="text-xl font-bold text-dark-text-secondary mb-4">Confrontos</h3>
+                    <h3 className="text-xl font-bold text-dark-text-secondary mb-4">{t('fixtures')}</h3>
                     <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
                         {Object.entries(rounds).map(([roundNum, matchups]) => (
                             <div key={roundNum}>
-                                <h4 className="font-bold text-dark-text-secondary mb-2">Rodada {roundNum}</h4>
+                                <h4 className="font-bold text-dark-text-secondary mb-2">{t('round').replace('{roundNum}', roundNum)}</h4>
                                 <div className="space-y-2">
                                     {(matchups as LeagueMatchup[]).map(matchup => (
                                         <div key={matchup.id} className="bg-dark-card p-3 rounded-lg flex items-center justify-between gap-2">
@@ -246,7 +250,7 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
                                                 {matchup.teamA.score ?? '-'} x {matchup.teamB.score ?? '-'}
                                             </div>
                                             <button onClick={() => onManageMatch(matchup, league.name)} className="btn-primary text-xs bg-brand-blue hover:bg-blue-700">
-                                                Gerenciar
+                                                {t('manageMatch')}
                                             </button>
                                         </div>
                                     ))}
@@ -258,7 +262,7 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
             </div>
             {showSaveConfirmation && (
                 <div className="fixed bottom-4 right-4 bg-brand-green text-white px-4 py-2 rounded-lg shadow-lg animate-pulse">
-                    Progresso da Liga salvo!
+                    {t('leagueProgressSaved')}
                 </div>
             )}
         </div>
