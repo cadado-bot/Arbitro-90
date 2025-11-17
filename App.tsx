@@ -4,86 +4,31 @@ import Stopwatch from './components/Stopwatch';
 import MatchManagement from './components/MatchManagement';
 import Dashboard from './components/Dashboard';
 import { MatchState, PlayerPosition, Player, Team } from './types';
-import { ClockIcon, WhistleIcon, ChartBarIcon, WhistleBallIcon } from './components/icons';
+import { ClockIcon, WhistleIcon, ChartBarIcon, WhistleBallIcon, SaveIcon, TrashIcon, AlertTriangleIcon } from './components/icons';
 
 type Tab = 'stopwatch' | 'management' | 'dashboard';
+type SavedGame = {
+    name: string;
+    saveData: {
+        matchState: MatchState;
+        time: number;
+        totalTime: number;
+    }
+}
+
+const SAVED_GAMES_KEY = 'arbitro90_savedGamesList';
 
 const initialMatchState: MatchState = {
   teamA: {
-    name: "Barcelona",
+    name: "Time A",
     flag: null,
-    players: [
-        { id: 1, name: 'Marc-André ter Stegen', number: 1, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 2, name: 'Alejandro Balde', number: 3, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 3, name: 'Ronald Araújo', number: 4, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 4, name: 'Pau Cubarsí', number: 5, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 5, name: 'Gavi', number: 6, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 6, name: 'Ferran Torres', number: 7, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 7, name: 'Pedri', number: 8, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 8, name: 'Robert Lewandowski', number: 9, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 9, name: 'Lamine Yamal', number: 10, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 10, name: 'Raphinha', number: 11, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 11, name: 'Frenkie de Jong', number: 21, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 12, name: 'Joan García', number: 13, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 13, name: 'Marcus Rashford', number: 14, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 14, name: 'Andreas Christensen', number: 15, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 15, name: 'Fermín López', number: 16, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 16, name: 'Marc Casadó', number: 17, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 17, name: 'Gerard Martín', number: 18, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 18, name: 'Dani Olmo', number: 20, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 19, name: 'Marc Bernal', number: 22, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 20, name: 'Jules Koundé', number: 23, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 21, name: 'Eric García', number: 24, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 22, name: 'Wojciech Szczesny', number: 25, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 23, name: 'Jofre Torrents', number: 26, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 24, name: 'Dro Fernández', number: 27, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 25, name: 'Roony Bardghji', number: 28, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 26, name: 'Toni Fernández', number: 29, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 27, name: 'Guille Fernández', number: 30, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 28, name: 'Diego Kochen', number: 31, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 29, name: 'Eder Aller', number: 33, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 30, name: 'Juan Hernández', number: 41, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 31, name: 'Xavi Espart', number: 42, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-    ],
+    players: [],
     score: 0,
   },
   teamB: {
-    name: "Real Madrid",
+    name: "Time B",
     flag: null,
-    players: [
-        { id: 32, name: 'Thibaut Courtois', number: 1, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 33, name: 'Dani Carvajal', number: 2, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 34, name: 'Éder Militão', number: 3, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 35, name: 'David Alaba', number: 4, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 36, name: 'Jude Bellingham', number: 5, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 37, name: 'Eduardo Camavinga', number: 6, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 38, name: 'Vinícius Júnior', number: 7, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 39, name: 'Federico Valverde', number: 8, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 40, name: 'Endrick', number: 9, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 41, name: 'Kylian Mbappé', number: 10, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 42, name: 'Rodrygo', number: 11, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: true },
-        { id: 43, name: 'Trent Alexander-Arnold', number: 12, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 44, name: 'Andriy Lunin', number: 13, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 45, name: 'Aurélien Tchouaméni', number: 14, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 46, name: 'Arda Güler', number: 15, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 47, name: 'Gonzalo García', number: 16, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 48, name: 'Raúl Asencio', number: 17, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 49, name: 'Álvaro Carreras', number: 18, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 50, name: 'Dani Ceballos', number: 19, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 51, name: 'Fran García', number: 20, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 52, name: 'Brahim Díaz', number: 21, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 53, name: 'Antonio Rüdiger', number: 22, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 54, name: 'Ferland Mendy', number: 23, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 55, name: 'Dean Huijsen', number: 24, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 56, name: 'Fran González', number: 26, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 57, name: 'Diego Aguado', number: 27, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 58, name: 'Javier Navarro', number: 29, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 59, name: 'Franco Mastantuono', number: 30, position: PlayerPosition.Forward, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 60, name: 'Jesús Fortea', number: 32, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 61, name: 'David Jiménez', number: 35, position: PlayerPosition.Defender, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 62, name: 'Sergio Mestre', number: 43, position: PlayerPosition.Goalkeeper, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-        { id: 63, name: 'Thiago Pitarch', number: 45, position: PlayerPosition.Midfielder, goals: 0, yellowCards: 0, redCard: false, isStarter: false },
-    ],
+    players: [],
     score: 0,
   },
   events: [],
@@ -96,6 +41,26 @@ const App: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [matchState, setMatchState] = useState<MatchState>(initialMatchState);
   
+  const [savedGamesList, setSavedGamesList] = useState<{ name: string }[]>([]);
+  const [selectedGame, setSelectedGame] = useState<string>('');
+  
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [saveGameName, setSaveGameName] = useState('');
+
+  // Load saved games list from localStorage on initial render
+  useEffect(() => {
+    try {
+      const savedDataJSON = localStorage.getItem(SAVED_GAMES_KEY);
+      if (savedDataJSON) {
+        const savedData: SavedGame[] = JSON.parse(savedDataJSON);
+        setSavedGamesList(savedData.map(g => ({ name: g.name })));
+      }
+    } catch (error) {
+      console.error("Failed to load saved games list", error);
+    }
+  }, []);
+
   useEffect(() => {
     let interval: number | undefined;
     if (isRunning) {
@@ -127,30 +92,82 @@ const App: React.FC = () => {
     setTotalTime(prev => prev + (minutes * 60));
   };
   
+  const handleOpenSaveModal = () => {
+    setSaveGameName(selectedGame || '');
+    setIsSaveModalOpen(true);
+  };
+
+  const handleConfirmSave = () => {
+    if (!saveGameName.trim()) return;
+
+    try {
+        const savedDataJSON = localStorage.getItem(SAVED_GAMES_KEY);
+        const savedGames: SavedGame[] = savedDataJSON ? JSON.parse(savedDataJSON) : [];
+        
+        const newSaveData = { matchState, time, totalTime };
+
+        const existingGameIndex = savedGames.findIndex(g => g.name === saveGameName.trim());
+        if (existingGameIndex > -1) {
+            savedGames[existingGameIndex].saveData = newSaveData;
+        } else {
+            savedGames.push({ name: saveGameName.trim(), saveData: newSaveData });
+        }
+
+        localStorage.setItem(SAVED_GAMES_KEY, JSON.stringify(savedGames));
+        setSavedGamesList(savedGames.map(g => ({ name: g.name })));
+        setSelectedGame(saveGameName.trim());
+        setIsSaveModalOpen(false);
+    } catch (error) {
+        console.error("Failed to save game", error);
+    }
+  };
+
+  const handleLoadGame = (gameName: string) => {
+      if (!gameName) return;
+      try {
+          const savedDataJSON = localStorage.getItem(SAVED_GAMES_KEY);
+          if (savedDataJSON) {
+              const savedGames: SavedGame[] = JSON.parse(savedDataJSON);
+              const gameToLoad = savedGames.find(g => g.name === gameName);
+              if (gameToLoad) {
+                  setMatchState(gameToLoad.saveData.matchState);
+                  setTime(gameToLoad.saveData.time);
+                  setTotalTime(gameToLoad.saveData.totalTime);
+                  setSelectedGame(gameName);
+                  setIsRunning(false); // Stop timer on load
+              }
+          }
+      } catch (error) {
+          console.error("Failed to load game", error);
+      }
+  };
+  
+  const handleOpenDeleteModal = () => {
+    if (!selectedGame) return;
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!selectedGame) return;
+
+    try {
+        const savedDataJSON = localStorage.getItem(SAVED_GAMES_KEY);
+        let savedGames: SavedGame[] = savedDataJSON ? JSON.parse(savedDataJSON) : [];
+        savedGames = savedGames.filter(g => g.name !== selectedGame);
+        localStorage.setItem(SAVED_GAMES_KEY, JSON.stringify(savedGames));
+        setSavedGamesList(savedGames.map(g => ({ name: g.name })));
+        handleClearReport();
+        setSelectedGame('');
+        setIsDeleteModalOpen(false);
+    } catch (error) {
+        console.error("Failed to delete game", error);
+    }
+  };
+
   const handleClearReport = () => {
-    // Confirmation is now handled in the Dashboard component's modal
-    setMatchState(prev => {
-        const resetPlayerStats = (player: Player): Player => ({
-            ...player,
-            goals: 0,
-            yellowCards: 0,
-            redCard: false,
-        });
-
-        const resetTeam = (team: Team): Team => ({
-            ...team,
-            score: 0,
-            players: team.players.map(resetPlayerStats)
-        });
-
-        return {
-            ...prev,
-            teamA: resetTeam(prev.teamA),
-            teamB: resetTeam(prev.teamB),
-            events: []
-        };
-    });
-    handleReset(); // Also reset the stopwatch
+    setMatchState(initialMatchState);
+    handleReset();
+    setSelectedGame('');
   };
 
   const formatTime = useCallback((timeInSeconds: number) => {
@@ -187,7 +204,7 @@ const App: React.FC = () => {
                   onAddTime={handleAddTime} 
                 />;
       case 'management':
-        return <MatchManagement matchState={matchState} setMatchState={setMatchState} currentTime={formatTime(time)} />;
+        return <MatchManagement matchState={matchState} setMatchState={setMatchState} currentTime={formatTime(time)} onSaveGame={handleOpenSaveModal} />;
       case 'dashboard':
         return <Dashboard matchState={matchState} onClearReport={handleClearReport} />;
       default:
@@ -197,12 +214,52 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-dark-bg text-dark-text min-h-screen flex flex-col font-sans">
+       <style>{`
+        .input-field-header {
+          background-color: #1e1e1e;
+          border: 1px solid #3a3a3a;
+          color: #e0e0e0;
+          padding: 6px 10px;
+          border-radius: 6px;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          font-size: 0.875rem;
+        }
+        .input-field-header:focus {
+          outline: none;
+          border-color: #1a73e8;
+          box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.5);
+        }
+       `}</style>
       <header className="bg-dark-surface shadow-md">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-center gap-3 text-dark-text">
-            <WhistleBallIcon className="h-8 w-8 text-brand-green" />
-            <h1 className="text-2xl font-bold tracking-wider">
-                ÁRBITRO <span className="text-brand-green font-semibold">90º</span>
-            </h1>
+        <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center justify-center gap-3 text-dark-text">
+                <WhistleBallIcon className="h-8 w-8 text-brand-green" />
+                <h1 className="text-2xl font-bold tracking-wider">
+                    ÁRBITRO <span className="text-brand-green font-semibold">90º</span>
+                </h1>
+            </div>
+            <div className="flex items-center gap-2">
+                <label htmlFor="saved-games" className="text-sm font-medium text-dark-text-secondary">Jogos Salvos:</label>
+                <select 
+                    id="saved-games"
+                    value={selectedGame}
+                    onChange={(e) => handleLoadGame(e.target.value)}
+                    className="input-field-header"
+                >
+                    <option value="" disabled>Carregar um jogo</option>
+                    {savedGamesList.map(g => (
+                        <option key={g.name} value={g.name}>{g.name}</option>
+                    ))}
+                </select>
+                <button 
+                    onClick={handleOpenDeleteModal} 
+                    disabled={!selectedGame}
+                    className="p-2 bg-brand-red rounded-md hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                    title="Apagar jogo selecionado"
+                >
+                    <TrashIcon className="h-4 w-4 text-white" />
+                </button>
+            </div>
         </div>
         <div className="container mx-auto px-4">
           <nav className="flex">
@@ -217,6 +274,67 @@ const App: React.FC = () => {
             {renderContent()}
         </div>
       </main>
+
+      {isSaveModalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setIsSaveModalOpen(false)}>
+            <div className="bg-dark-card p-6 rounded-lg w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <h3 className="text-lg font-bold mb-4">Salvar Jogo</h3>
+                <label htmlFor="saveGameName" className="block mb-1 text-sm text-dark-text-secondary">Nome da Partida</label>
+                <input
+                    id="saveGameName"
+                    type="text"
+                    value={saveGameName}
+                    onChange={(e) => setSaveGameName(e.target.value)}
+                    placeholder="Ex: Final do Campeonato"
+                    className="input-field-header w-full mb-6"
+                    autoFocus
+                />
+                <div className="flex justify-end gap-3">
+                    <button
+                        onClick={() => setIsSaveModalOpen(false)}
+                        className="px-4 py-2 rounded-md bg-dark-surface hover:bg-gray-700 text-dark-text transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleConfirmSave}
+                        disabled={!saveGameName.trim()}
+                        className="px-4 py-2 rounded-md bg-brand-blue hover:bg-blue-700 text-white transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                    >
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-dark-card p-6 rounded-lg w-full max-w-md shadow-2xl text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-900/50 mb-4">
+                    <AlertTriangleIcon className="h-6 w-6 text-brand-red" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Apagar Jogo Salvo?</h3>
+                <p className="text-sm text-dark-text-secondary mb-6">
+                    Tem certeza que deseja apagar o jogo <span className="font-bold text-dark-text">"{selectedGame}"</span>? Esta ação é irreversível.
+                </p>
+                <div className="flex justify-center gap-4">
+                    <button
+                        onClick={() => setIsDeleteModalOpen(false)}
+                        className="px-6 py-2 rounded-md bg-dark-surface hover:bg-gray-700 text-dark-text transition-colors w-full"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleConfirmDelete}
+                        className="px-6 py-2 rounded-md bg-brand-red hover:bg-red-700 text-white transition-colors w-full"
+                    >
+                        Confirmar Exclusão
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };

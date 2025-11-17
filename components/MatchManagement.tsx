@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { MatchState, Player, Team, GameEventType, PlayerPosition } from '../types';
-import { PlusIcon, TrashIcon } from './icons';
+import { PlusIcon, TrashIcon, SaveIcon } from './icons';
 
 interface MatchManagementProps {
   matchState: MatchState;
   setMatchState: React.Dispatch<React.SetStateAction<MatchState>>;
   currentTime: string;
+  onSaveGame: () => void;
 }
 
 const TeamPanel: React.FC<{
@@ -224,7 +225,7 @@ const performSubstitution = (players: Player[], playerOutId: number, playerInId:
     });
 };
 
-const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchState, currentTime }) => {
+const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchState, currentTime, onSaveGame }) => {
   const [subModal, setSubModal] = useState<{ teamId: 'A'|'B', playerOut: Player } | null>(null);
   const [selectedPlayerIn, setSelectedPlayerIn] = useState<string>('');
   const [substitutedPlayerIds, setSubstitutedPlayerIds] = useState<number[]>([]);
@@ -380,6 +381,10 @@ const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchS
     const playerIn = team.players.find(p => p.id === parseInt(selectedPlayerIn, 10));
 
     if (playerIn) {
+      setMatchState(prev => {
+        const currentTeam = prev[teamKey];
+        const updatedPlayers = performSubstitution(currentTeam.players, playerOut.id, playerIn.id);
+        
         const newEvent = {
             id: Date.now(),
             type: GameEventType.Substitution,
@@ -389,20 +394,17 @@ const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchS
             time: currentTime,
         };
 
-        setMatchState(prev => {
-            const currentTeam = prev[teamKey];
-            const updatedPlayers = performSubstitution(currentTeam.players, playerOut.id, playerIn.id);
-            return {
-                ...prev,
-                events: [newEvent, ...prev.events],
-                [teamKey]: {
-                    ...currentTeam,
-                    players: updatedPlayers,
-                },
-            };
-        });
+        return {
+            ...prev,
+            events: [newEvent, ...prev.events],
+            [teamKey]: {
+                ...currentTeam,
+                players: updatedPlayers,
+            },
+        };
+      });
 
-        setSubstitutedPlayerIds(prevIds => [...new Set([...prevIds, playerOut.id, playerIn.id])]);
+      setSubstitutedPlayerIds(prevIds => [...new Set([...prevIds, playerOut.id, playerIn.id])]);
     }
     
     setSubModal(null);
@@ -445,6 +447,14 @@ const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchS
           font-weight: 600;
           transition: background-color 0.2s, opacity 0.2s;
         }
+         .btn-primary {
+          padding: 8px 12px;
+          color: white;
+          border-radius: 6px;
+          font-weight: 600;
+          transition: background-color 0.2s, opacity 0.2s;
+          font-size: 0.875rem;
+        }
         .pos-badge {
             font-size: 0.75rem;
             font-weight: 700;
@@ -459,11 +469,19 @@ const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchS
         .pos-M { background-color: #1e8e3e; }
         .pos-A { background-color: #d93025; }
       `}</style>
+
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center justify-center text-4xl font-bold text-dark-text-secondary">
+          {matchState.teamA.score} x {matchState.teamB.score}
+        </div>
+         <button onClick={onSaveGame} className="btn-primary bg-brand-blue hover:bg-blue-700 flex items-center gap-2">
+            <SaveIcon className="h-4 w-4" />
+            Salvar Jogo
+        </button>
+      </div>
+
       <div className="flex flex-col md:flex-row gap-6">
         <TeamPanel team={matchState.teamA} teamId="A" onUpdateTeam={updateTeam} onAddEvent={addEvent} onOpenSubModal={handleOpenSubModal} onRemoveGoal={handleRemoveGoal} onRemoveCard={handleRemoveCard} otherTeam={matchState.teamB} substitutedPlayerIds={substitutedPlayerIds} />
-        <div className="flex items-center justify-center text-4xl font-bold text-dark-text-secondary my-4 md:my-0">
-            {matchState.teamA.score} x {matchState.teamB.score}
-        </div>
         <TeamPanel team={matchState.teamB} teamId="B" onUpdateTeam={updateTeam} onAddEvent={addEvent} onOpenSubModal={handleOpenSubModal} onRemoveGoal={handleRemoveGoal} onRemoveCard={handleRemoveCard} otherTeam={matchState.teamA} substitutedPlayerIds={substitutedPlayerIds} />
       </div>
 
