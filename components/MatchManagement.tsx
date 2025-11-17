@@ -7,6 +7,7 @@ interface MatchManagementProps {
   setMatchState: React.Dispatch<React.SetStateAction<MatchState>>;
   currentTime: string;
   onSaveGame: () => void;
+  onNewGame: () => void;
   savedGamesList: { name: string }[];
   selectedGame: string;
   onLoadGame: (name: string) => void;
@@ -230,7 +231,7 @@ const performSubstitution = (players: Player[], playerOutId: number, playerInId:
 };
 
 const MatchManagement: React.FC<MatchManagementProps> = ({ 
-    matchState, setMatchState, currentTime, onSaveGame,
+    matchState, setMatchState, currentTime, onSaveGame, onNewGame,
     savedGamesList, selectedGame, onLoadGame, onOpenDeleteModal 
 }) => {
   const [subModal, setSubModal] = useState<{ teamId: 'A'|'B', playerOut: Player } | null>(null);
@@ -492,10 +493,16 @@ const MatchManagement: React.FC<MatchManagementProps> = ({
         <div className="flex items-center justify-center text-4xl font-bold text-dark-text-secondary">
           {matchState.teamA.score} x {matchState.teamB.score}
         </div>
-         <button onClick={onSaveGame} className="btn-primary bg-brand-blue hover:bg-blue-700 flex items-center gap-2">
-            <SaveIcon className="h-4 w-4" />
-            Salvar Jogo
-        </button>
+        <div className="flex items-center gap-2">
+            <button onClick={onSaveGame} className="btn-primary bg-brand-blue hover:bg-blue-700 flex items-center gap-2">
+                <SaveIcon className="h-4 w-4" />
+                Salvar Jogo
+            </button>
+            <button onClick={onNewGame} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center gap-2">
+                <PlusIcon className="h-4 w-4" />
+                Novo Jogo
+            </button>
+         </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">

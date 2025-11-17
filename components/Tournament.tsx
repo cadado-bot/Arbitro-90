@@ -11,6 +11,7 @@ interface TournamentProps {
     onLoadTournament: (name: string) => void;
     onSaveTournament: () => void;
     onOpenDeleteTournamentModal: () => void;
+    onNewTournament: () => void;
 }
 
 const MatchupCard: React.FC<{ matchup: Matchup, onManageMatch: () => void, title?: string }> = ({ matchup, onManageMatch, title }) => {
@@ -114,8 +115,15 @@ const tournamentPhases = [
 const roundOrder = ['DEZESSEIS AVOS DE FINAL', 'OITAVAS DE FINAL', 'QUARTAS DE FINAL', 'SEMIFINAIS', 'FINAL'];
 
 
-const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTournament, onManageMatch, savedTournaments, selectedTournamentName, onLoadTournament, onSaveTournament, onOpenDeleteTournamentModal }) => {
+const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTournament, onManageMatch, savedTournaments, selectedTournamentName, onLoadTournament, onSaveTournament, onOpenDeleteTournamentModal, onNewTournament }) => {
     const [creationPhase, setCreationPhase] = useState<{ key: string, name: string, teams: number } | null>(null);
+    const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+
+    const handleSave = () => {
+        onSaveTournament();
+        setShowSaveConfirmation(true);
+        setTimeout(() => setShowSaveConfirmation(false), 2000);
+    };
 
     if (!tournament) {
         return (
@@ -170,10 +178,16 @@ const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTo
                     </button>
                 </div>
                 <h2 className="text-xl font-bold">{tournament.name}</h2>
-                 <button onClick={onSaveTournament} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
-                    <SaveIcon className="h-4 w-4" />
-                    Salvar Torneio
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={handleSave} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
+                        <SaveIcon className="h-4 w-4" />
+                        Salvar Torneio
+                    </button>
+                    <button onClick={onNewTournament} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center gap-2">
+                        <PlusIcon className="h-4 w-4" />
+                        Novo Torneio
+                    </button>
+                </div>
             </div>
 
             <div className="flex-grow overflow-x-auto">
@@ -188,6 +202,11 @@ const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTo
                     )}
                 </div>
             </div>
+            {showSaveConfirmation && (
+                <div className="fixed bottom-4 right-4 bg-brand-green text-white px-4 py-2 rounded-lg shadow-lg animate-pulse">
+                    Progresso do Torneio salvo!
+                </div>
+            )}
         </div>
     );
 };

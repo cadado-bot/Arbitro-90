@@ -5,7 +5,7 @@ import Dashboard from './components/Dashboard';
 import TournamentComponent from './components/Tournament';
 import LeagueComponent from './components/League';
 import { MatchState, Tournament, Matchup, League, LeagueTeamStats, LeagueMatchup } from './types';
-import { ClockIcon, WhistleIcon, ChartBarIcon, WhistleBallIcon, TrashIcon, TrophyIcon, AlertTriangleIcon, ListBulletIcon } from './components/icons';
+import { ClockIcon, WhistleIcon, ChartBarIcon, WhistleBallIcon, TrashIcon, TrophyIcon, AlertTriangleIcon, ListBulletIcon, PlusIcon } from './components/icons';
 
 type Tab = 'stopwatch' | 'management' | 'dashboard' | 'tournament' | 'league';
 
@@ -45,7 +45,6 @@ const App: React.FC = () => {
   
   const [savedTournaments, setSavedTournaments] = useState<Tournament[]>([]);
   const [selectedTournamentName, setSelectedTournamentName] = useState('');
-  const [isSaveTournamentModalOpen, setIsSaveTournamentModalOpen] = useState(false);
   const [isDeleteTournamentModalOpen, setIsDeleteTournamentModalOpen] = useState(false);
   const activeTournament = savedTournaments.find(t => t.name === selectedTournamentName) || null;
   
@@ -295,6 +294,10 @@ const App: React.FC = () => {
     handleReset();
     setSelectedGame('');
   };
+  
+  const handleNewGame = () => handleClearReport();
+  const handleNewTournament = () => setSelectedTournamentName('');
+  const handleNewLeague = () => setSelectedLeagueName('');
 
   const handleCreateTournament = (teamNames: string[], tournamentName: string, phase: { key: string, name: string, teams: number }) => {
       let currentId = 1;
@@ -374,6 +377,10 @@ const App: React.FC = () => {
       handleLoadGame(gameKey!); setActiveTab('management');
     }
   }, [savedTournaments, handleLoadGame]);
+  
+   const handleSaveActiveTournament = () => {
+    localStorage.setItem(SAVED_TOURNAMENTS_KEY, JSON.stringify(savedTournaments));
+   };
 
   const handleCreateLeague = (teamNames: string[], leagueName: string) => {
     const stats: LeagueTeamStats[] = teamNames.map(name => ({ name, points: 0, gamesPlayed: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, goalDifference: 0 }));
@@ -466,10 +473,10 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'stopwatch': return <Stopwatch time={time} totalTime={totalTime} isRunning={isRunning} onStart={handleStart} onStop={handleStop} onReset={handleReset} onSetTotalTime={handleSetTotalTime} onAddTime={handleAddTime} />;
-      case 'management': return <MatchManagement matchState={matchState} setMatchState={setMatchState} currentTime={formatTime(time)} onSaveGame={handleOpenSaveModal} savedGamesList={savedGamesList} selectedGame={selectedGame} onLoadGame={handleLoadGame} onOpenDeleteModal={handleOpenDeleteModal} />;
+      case 'management': return <MatchManagement matchState={matchState} setMatchState={setMatchState} currentTime={formatTime(time)} onSaveGame={handleOpenSaveModal} onNewGame={handleNewGame} savedGamesList={savedGamesList} selectedGame={selectedGame} onLoadGame={handleLoadGame} onOpenDeleteModal={handleOpenDeleteModal} />;
       case 'dashboard': return <Dashboard matchState={matchState} onClearReport={handleClearReport} />;
-      case 'tournament': return <TournamentComponent tournament={activeTournament} onCreateTournament={handleCreateTournament} onManageMatch={handleManageTournamentMatch} savedTournaments={savedTournaments} selectedTournamentName={selectedTournamentName} onLoadTournament={handleLoadTournament} onSaveTournament={() => {}} onOpenDeleteTournamentModal={handleOpenDeleteTournamentModal} />;
-      case 'league': return <LeagueComponent league={activeLeague} onCreateLeague={handleCreateLeague} onManageMatch={handleManageLeagueMatch} onSaveLeague={() => handleSaveLeagues(savedLeagues)} savedLeagues={savedLeagues} selectedLeagueName={selectedLeagueName} onLoadLeague={handleLoadLeague} onOpenDeleteLeagueModal={handleOpenDeleteLeagueModal} />;
+      case 'tournament': return <TournamentComponent tournament={activeTournament} onCreateTournament={handleCreateTournament} onManageMatch={handleManageTournamentMatch} savedTournaments={savedTournaments} selectedTournamentName={selectedTournamentName} onLoadTournament={handleLoadTournament} onSaveTournament={handleSaveActiveTournament} onOpenDeleteTournamentModal={handleOpenDeleteTournamentModal} onNewTournament={handleNewTournament} />;
+      case 'league': return <LeagueComponent league={activeLeague} onCreateLeague={handleCreateLeague} onManageMatch={handleManageLeagueMatch} onSaveLeague={() => handleSaveLeagues(savedLeagues)} onNewLeague={handleNewLeague} savedLeagues={savedLeagues} selectedLeagueName={selectedLeagueName} onLoadLeague={handleLoadLeague} onOpenDeleteLeagueModal={handleOpenDeleteLeagueModal} />;
       default: return null;
     }
   };

@@ -7,6 +7,7 @@ interface LeagueProps {
     onCreateLeague: (teamNames: string[], leagueName: string) => void;
     onManageMatch: (matchup: LeagueMatchup, leagueName: string) => void;
     onSaveLeague: () => void;
+    onNewLeague: () => void;
     savedLeagues: { name: string }[];
     selectedLeagueName: string;
     onLoadLeague: (name: string) => void;
@@ -98,7 +99,7 @@ const CreateLeagueModal: React.FC<{ onClose: () => void; onCreate: (teamNames: s
 };
 
 
-const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onManageMatch, onSaveLeague, savedLeagues, selectedLeagueName, onLoadLeague, onOpenDeleteLeagueModal }) => {
+const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onManageMatch, onSaveLeague, onNewLeague, savedLeagues, selectedLeagueName, onLoadLeague, onOpenDeleteLeagueModal }) => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
 
@@ -165,10 +166,16 @@ const LeagueComponent: React.FC<LeagueProps> = ({ league, onCreateLeague, onMana
                     </button>
                 </div>
                  <h3 className="text-xl font-bold text-dark-text">{league.name}</h3>
-                <button onClick={handleSave} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
-                    <SaveIcon className="h-4 w-4" />
-                    Salvar Liga
-                </button>
+                 <div className="flex items-center gap-2">
+                    <button onClick={handleSave} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
+                        <SaveIcon className="h-4 w-4" />
+                        Salvar Liga
+                    </button>
+                    <button onClick={onNewLeague} className="btn-primary bg-gray-600 hover:bg-gray-700 flex items-center gap-2">
+                        <PlusIcon className="h-4 w-4" />
+                        Nova Liga
+                    </button>
+                 </div>
             </div>
             <div className="flex flex-col lg:flex-row gap-6 flex-grow">
                 <div className="flex-grow lg:w-2/3">
