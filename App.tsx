@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Stopwatch from './components/Stopwatch';
 import MatchManagement from './components/MatchManagement';
@@ -185,10 +184,12 @@ const App: React.FC = () => {
         let savedGames: SavedGame[] = savedDataJSON ? JSON.parse(savedDataJSON) : [];
         savedGames = savedGames.filter(g => g.name !== selectedGame);
         localStorage.setItem(SAVED_GAMES_KEY, JSON.stringify(savedGames));
+        
         setSavedGamesList(savedGames.map(g => ({ name: g.name })));
         setIsDeleteModalOpen(false);
+        
         if (selectedGame.startsWith('Torneio:')) {
-            saveTournament(null); // Clear the whole tournament if one of its matches is deleted
+            saveTournament(null);
         }
         handleClearReport();
     } catch (error) { console.error("Failed to delete game", error); }
@@ -203,14 +204,27 @@ const App: React.FC = () => {
   const handleCreateTournament = (teamNames: string[], phase: { key: string, name: string, teams: number }) => {
       let currentId = 1;
       const rounds: Tournament['rounds'] = {};
+      let thirdPlace: Matchup | null = null;
+
+      if (phase.key === '3P') {
+          thirdPlace = {
+              id: currentId++,
+              teamA: { name: teamNames[0] || 'Time A', score: null },
+              teamB: { name: teamNames[1] || 'Time B', score: null },
+              nextMatchupId: null,
+              gameSaveKey: `Torneio (3ºL): ${teamNames[0] || 'Time A'} vs ${teamNames[1] || 'Time B'}`
+          };
+          saveTournament({ rounds, thirdPlace });
+          return;
+      }
       
-      const createRound = (numTeams: number, roundName: string): Matchup[] => {
+      const createRound = (numTeams: number, roundName: string, teams: string[]): Matchup[] => {
           const matchups: Matchup[] = [];
           for (let i = 0; i < numTeams; i += 2) {
               matchups.push({
                   id: currentId++,
-                  teamA: { name: teamNames[i] || `Vencedor`, score: null },
-                  teamB: { name: teamNames[i + 1] || `Vencedor`, score: null },
+                  teamA: { name: teams[i] || `Vencedor`, score: null },
+                  teamB: { name: teams[i + 1] || `Vencedor`, score: null },
                   nextMatchupId: null,
                   loserNextMatchupId: null,
                   gameSaveKey: null,
@@ -227,25 +241,38 @@ const App: React.FC = () => {
               matchup.nextMatchupId = nextMatchup.id;
               matchup.winnerSlot = (i % 2 === 0) ? 'A' : 'B';
           }
+      };
+
+      const allPhases = [
+          { key: 'R32', name: 'DEZESSEIS AVOS DE FINAL', teams: 32 },
+          { key: 'R16', name: 'OITAVAS DE FINAL', teams: 16 },
+          { key: 'QF', name: 'QUARTAS DE FINAL', teams: 8 },
+          { key: 'SF', name: 'SEMIFINAIS', teams: 4 },
+          { key: 'F', name: 'FINAL', teams: 2 },
+      ];
+      const startIndex = allPhases.findIndex(p => p.key === phase.key);
+      let previousRound: Matchup[] = [];
+
+      for (let i = startIndex; i < allPhases.length; i++) {
+          const currentPhase = allPhases[i];
+          const isFirstRound = i === startIndex;
+          const teams = isFirstRound ? teamNames : [];
+          const currentRound = createRound(currentPhase.teams, currentPhase.name, teams);
+          if (!isFirstRound) {
+              linkRounds(previousRound, currentRound);
+          }
+          previousRound = currentRound;
       }
 
-      let r16: Matchup[] = [], qf: Matchup[] = [], sf: Matchup[] = [], f: Matchup[] = [];
-      let thirdPlace: Matchup | null = null;
-      
-      if (phase.key === 'R16') r16 = createRound(16, 'OITAVAS DE FINAL');
-      if (phase.key === 'QF' || r16.length > 0) qf = createRound(phase.key === 'QF' ? 8 : 0, 'QUARTAS DE FINAL');
-      if (phase.key === 'SF' || qf.length > 0) sf = createRound(phase.key === 'SF' ? 4 : 0, 'SEMIFINAIS');
-      if (phase.key === 'F' || sf.length > 0) f = createRound(phase.key === 'F' ? 2 : 0, 'FINAL');
-      
-      if (r16.length > 0) linkRounds(r16, qf);
-      if (qf.length > 0) linkRounds(qf, sf);
-      if (sf.length > 0) {
-          linkRounds(sf, f);
-          thirdPlace = { id: currentId++, teamA: { name: 'Perdedor SF1', score: null }, teamB: { name: 'Perdedor SF2', score: null }, nextMatchupId: null, gameSaveKey: null };
-          sf[0].loserNextMatchupId = thirdPlace.id;
-          sf[0].loserSlot = 'A';
-          sf[1].loserNextMatchupId = thirdPlace.id;
-          sf[1].loserSlot = 'B';
+      if (startIndex <= 3) { // Starts at or before Semifinals
+          const semiFinals = rounds['SEMIFINAIS'];
+          if (semiFinals) {
+              thirdPlace = { id: currentId++, teamA: { name: 'Perdedor SF1', score: null }, teamB: { name: 'Perdedor SF2', score: null }, nextMatchupId: null, gameSaveKey: null };
+              semiFinals[0].loserNextMatchupId = thirdPlace.id;
+              semiFinals[0].loserSlot = 'A';
+              semiFinals[1].loserNextMatchupId = thirdPlace.id;
+              semiFinals[1].loserSlot = 'B';
+          }
       }
 
       Object.values(rounds).flat().forEach(matchup => {

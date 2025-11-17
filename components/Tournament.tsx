@@ -9,7 +9,7 @@ interface TournamentProps {
 }
 
 const MatchupCard: React.FC<{ matchup: Matchup, onManageMatch: () => void, title?: string }> = ({ matchup, onManageMatch, title }) => {
-    const isClickable = !matchup.teamA.name.includes('Vencedor') && !matchup.teamB.name.includes('Vencedor');
+    const isClickable = !matchup.teamA.name.includes('Vencedor') && !matchup.teamB.name.includes('Vencedor') && !matchup.teamA.name.includes('Perdedor');
     return (
         <div className="bg-dark-card p-3 rounded-lg shadow-md flex flex-col gap-2 min-h-[120px]">
             {title && <h4 className="text-sm font-bold text-center text-dark-text-secondary -mt-1 mb-1">{title}</h4>}
@@ -96,12 +96,14 @@ const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, team
 };
 
 const tournamentPhases = [
+    { key: 'R32', name: 'Dezesseis avos de Final', teams: 32 },
     { key: 'R16', name: 'Oitavas de Final', teams: 16 },
     { key: 'QF', name: 'Quartas de Final', teams: 8 },
     { key: 'SF', name: 'Semifinais', teams: 4 },
     { key: 'F', name: 'Final', teams: 2 },
+    { key: '3P', name: 'Disputa de 3º Lugar', teams: 2 },
 ];
-const roundOrder = ['OITAVAS DE FINAL', 'QUARTAS DE FINAL', 'SEMIFINAIS', 'FINAL'];
+const roundOrder = ['DEZESSEIS AVOS DE FINAL', 'OITAVAS DE FINAL', 'QUARTAS DE FINAL', 'SEMIFINAIS', 'FINAL'];
 
 
 const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTournament, onManageMatch }) => {
@@ -112,7 +114,7 @@ const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTo
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <h2 className="text-2xl font-bold text-dark-text mb-2">Nenhum torneio em andamento.</h2>
                 <p className="text-dark-text-secondary mb-6">Selecione uma fase para iniciar um novo torneio.</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {tournamentPhases.map(phase => (
                         <button
                             key={phase.key}
