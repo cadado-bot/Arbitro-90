@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { Tournament, Matchup } from '../types';
-import { PlusIcon } from './icons';
+import { PlusIcon, SaveIcon, TrashIcon } from './icons';
 
 interface TournamentProps {
     tournament: Tournament | null;
-    onCreateTournament: (teamNames: string[], phase: { key: string, name: string, teams: number }) => void;
-    onManageMatch: (matchup: Matchup) => void;
+    onCreateTournament: (teamNames: string[], tournamentName: string, phase: { key: string, name: string, teams: number }) => void;
+    onManageMatch: (matchup: Matchup, tournamentName: string) => void;
+    savedTournaments: { name: string }[];
+    selectedTournamentName: string;
+    onLoadTournament: (name: string) => void;
+    onSaveTournament: () => void;
+    onOpenDeleteTournamentModal: () => void;
 }
 
 const MatchupCard: React.FC<{ matchup: Matchup, onManageMatch: () => void, title?: string }> = ({ matchup, onManageMatch, title }) => {
@@ -45,8 +50,9 @@ const BracketColumn: React.FC<{ title: string; matchups: Matchup[]; onManageMatc
     </div>
 );
 
-const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, teams: number }, onClose: () => void; onCreate: (teamNames: string[]) => void }> = ({ phase, onClose, onCreate }) => {
+const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, teams: number }, onClose: () => void; onCreate: (teamNames: string[], tournamentName: string) => void }> = ({ phase, onClose, onCreate }) => {
     const [teamNames, setTeamNames] = useState<string[]>(Array(phase.teams).fill(''));
+    const [tournamentName, setTournamentName] = useState('');
 
     const handleNameChange = (index: number, name: string) => {
         const newNames = [...teamNames];
@@ -56,8 +62,8 @@ const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, team
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (teamNames.every(name => name.trim() !== '')) {
-            onCreate(teamNames.map(name => name.trim()));
+        if (teamNames.every(name => name.trim() !== '') && tournamentName.trim() !== '') {
+            onCreate(teamNames.map(name => name.trim()), tournamentName.trim());
             onClose();
         }
     };
@@ -67,7 +73,9 @@ const CreateTournamentModal: React.FC<{ phase: { key: string, name: string, team
             <div className="bg-dark-card p-6 rounded-lg w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-lg font-bold mb-4">Criar Novo Torneio</h3>
                 <form onSubmit={handleSubmit} className="space-y-3">
-                    <p className="text-sm text-dark-text-secondary pb-2">Insira os nomes das {phase.teams} equipes para a fase de {phase.name}.</p>
+                    <label htmlFor="tournamentName" className="block text-sm text-dark-text-secondary">Nome do Torneio</label>
+                    <input id="tournamentName" type="text" value={tournamentName} onChange={(e) => setTournamentName(e.target.value)} placeholder="Ex: Copa do Mundo" className="input-field w-full" required />
+                    <p className="text-sm text-dark-text-secondary pt-2">Insira os nomes das {phase.teams} equipes para a fase de {phase.name}.</p>
                     <div className={`grid ${phase.teams > 4 ? 'grid-cols-2' : 'grid-cols-1'} gap-3 max-h-60 overflow-y-auto pr-2`}>
                         {teamNames.map((name, index) => (
                             <input
@@ -106,14 +114,24 @@ const tournamentPhases = [
 const roundOrder = ['DEZESSEIS AVOS DE FINAL', 'OITAVAS DE FINAL', 'QUARTAS DE FINAL', 'SEMIFINAIS', 'FINAL'];
 
 
-const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTournament, onManageMatch }) => {
+const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTournament, onManageMatch, savedTournaments, selectedTournamentName, onLoadTournament, onSaveTournament, onOpenDeleteTournamentModal }) => {
     const [creationPhase, setCreationPhase] = useState<{ key: string, name: string, teams: number } | null>(null);
 
     if (!tournament) {
         return (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <h2 className="text-2xl font-bold text-dark-text mb-2">Nenhum torneio em andamento.</h2>
-                <p className="text-dark-text-secondary mb-6">Selecione uma fase para iniciar um novo torneio.</p>
+                <p className="text-dark-text-secondary mb-6">Crie um novo torneio ou carregue um existente.</p>
+                
+                <div className="flex items-center gap-2 mb-6">
+                    <label htmlFor="saved-tournaments" className="text-sm font-medium text-dark-text-secondary">Torneios Salvos:</label>
+                    <select id="saved-tournaments" value={selectedTournamentName} onChange={(e) => onLoadTournament(e.target.value)} className="input-field-header">
+                        <option value="" disabled>Carregar um torneio</option>
+                        {savedTournaments.map(t => (<option key={t.name} value={t.name}>{t.name}</option>))}
+                    </select>
+                </div>
+
+                <p className="text-dark-text-secondary mb-4">Ou crie um novo:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {tournamentPhases.map(phase => (
                         <button
@@ -126,8 +144,8 @@ const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTo
                         </button>
                     ))}
                 </div>
-                {creationPhase && <CreateTournamentModal phase={creationPhase} onCreate={(teams) => onCreateTournament(teams, creationPhase)} onClose={() => setCreationPhase(null)} />}
-                <style>{`.btn-primary { padding: 10px 16px; font-size: 1rem; }`}</style>
+                {creationPhase && <CreateTournamentModal phase={creationPhase} onCreate={(teams, name) => onCreateTournament(teams, name, creationPhase)} onClose={() => setCreationPhase(null)} />}
+                <style>{`.btn-primary { padding: 10px 16px; font-size: 1rem; } .input-field-header { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-size: 0.875rem; }`}</style>
             </div>
         );
     }
@@ -137,17 +155,38 @@ const TournamentComponent: React.FC<TournamentProps> = ({ tournament, onCreateTo
     });
 
     return (
-        <div className="p-4 md:p-6 text-dark-text h-full overflow-x-auto">
-             <style>{`.btn-primary { padding: 6px 10px; font-weight: 600; color: white; border-radius: 6px; }`}</style>
-            <div className="flex justify-center items-start gap-12 p-8">
-                 {sortedRounds.map(([title, matchups]) => (
-                     <BracketColumn key={title} title={title} matchups={matchups} onManageMatch={onManageMatch} />
-                 ))}
-                 {tournament.thirdPlace && (
-                    <div className="flex flex-col items-center gap-8 w-64 mt-20">
-                         <MatchupCard matchup={tournament.thirdPlace} onManageMatch={() => onManageMatch(tournament.thirdPlace!)} title="DISPUTA DE 3º LUGAR" />
-                    </div>
-                 )}
+        <div className="p-4 md:p-6 text-dark-text h-full flex flex-col">
+            <style>{`.btn-primary { padding: 6px 10px; font-weight: 600; color: white; border-radius: 6px; } .input-field-header { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-size: 0.875rem; }`}</style>
+            
+            <div className="flex justify-between items-center mb-4 flex-wrap gap-4 border-b border-dark-surface pb-4">
+                <div className="flex items-center gap-2">
+                    <label htmlFor="saved-tournaments" className="text-sm font-medium text-dark-text-secondary">Torneios Salvos:</label>
+                    <select id="saved-tournaments" value={selectedTournamentName} onChange={(e) => onLoadTournament(e.target.value)} className="input-field-header">
+                        <option value="" disabled>Carregar um torneio</option>
+                        {savedTournaments.map(t => (<option key={t.name} value={t.name}>{t.name}</option>))}
+                    </select>
+                    <button onClick={onOpenDeleteTournamentModal} disabled={!selectedTournamentName} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title="Apagar torneio selecionado">
+                        <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
+                    </button>
+                </div>
+                <h2 className="text-xl font-bold">{tournament.name}</h2>
+                 <button onClick={onSaveTournament} className="btn-primary bg-brand-green hover:bg-green-700 flex items-center gap-2">
+                    <SaveIcon className="h-4 w-4" />
+                    Salvar Torneio
+                </button>
+            </div>
+
+            <div className="flex-grow overflow-x-auto">
+                <div className="flex justify-center items-start gap-12 p-8 min-w-max">
+                    {sortedRounds.map(([title, matchups]) => (
+                        <BracketColumn key={title} title={title} matchups={matchups} onManageMatch={(m) => onManageMatch(m, tournament.name)} />
+                    ))}
+                    {tournament.thirdPlace && (
+                        <div className="flex flex-col items-center gap-8 w-64 mt-20">
+                            <MatchupCard matchup={tournament.thirdPlace} onManageMatch={() => onManageMatch(tournament.thirdPlace!, tournament.name)} title="DISPUTA DE 3º LUGAR" />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

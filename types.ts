@@ -60,9 +60,37 @@ export interface Matchup {
 }
 
 export interface Tournament {
+    name: string;
     // A map of round names to the matchups in that round.
     // e.g., { "QUARTAS": [...], "SEMIFINAIS": [...] }
     rounds: Record<string, Matchup[]>;
     // Optional third place match
     thirdPlace: Matchup | null;
+}
+
+// League Types
+export interface LeagueTeamStats {
+    name: string;
+    points: number;
+    gamesPlayed: number;
+    wins: number;
+    draws: number;
+    losses: number;
+    goalsFor: number;
+    goalsAgainst: number;
+    goalDifference: number;
+}
+
+export interface LeagueMatchup {
+    id: number;
+    round: number;
+    teamA: { name: string; score: number | null };
+    teamB: { name: string; score: number | null };
+    gameSaveKey: string;
+}
+
+export interface League {
+    name: string;
+    stats: LeagueTeamStats[];
+    matchups: LeagueMatchup[];
 }

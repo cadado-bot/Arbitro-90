@@ -7,6 +7,10 @@ interface MatchManagementProps {
   setMatchState: React.Dispatch<React.SetStateAction<MatchState>>;
   currentTime: string;
   onSaveGame: () => void;
+  savedGamesList: { name: string }[];
+  selectedGame: string;
+  onLoadGame: (name: string) => void;
+  onOpenDeleteModal: () => void;
 }
 
 const TeamPanel: React.FC<{
@@ -225,7 +229,10 @@ const performSubstitution = (players: Player[], playerOutId: number, playerInId:
     });
 };
 
-const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchState, currentTime, onSaveGame }) => {
+const MatchManagement: React.FC<MatchManagementProps> = ({ 
+    matchState, setMatchState, currentTime, onSaveGame,
+    savedGamesList, selectedGame, onLoadGame, onOpenDeleteModal 
+}) => {
   const [subModal, setSubModal] = useState<{ teamId: 'A'|'B', playerOut: Player } | null>(null);
   const [selectedPlayerIn, setSelectedPlayerIn] = useState<string>('');
   const [substitutedPlayerIds, setSubstitutedPlayerIds] = useState<number[]>([]);
@@ -431,6 +438,7 @@ const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchS
           border-color: #1a73e8;
           box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.5);
         }
+        .input-field-header { background-color: #1e1e1e; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-size: 0.875rem; } .input-field-header:focus { outline: none; border-color: #1a73e8; }
         .btn-icon {
           padding: 8px;
           color: white;
@@ -470,7 +478,17 @@ const MatchManagement: React.FC<MatchManagementProps> = ({ matchState, setMatchS
         .pos-A { background-color: #d93025; }
       `}</style>
 
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
+        <div className="flex items-center gap-2">
+            <label htmlFor="saved-games" className="text-sm font-medium text-dark-text-secondary">Jogos Salvos:</label>
+            <select id="saved-games" value={selectedGame} onChange={(e) => onLoadGame(e.target.value)} className="input-field-header">
+                <option value="" disabled>Carregar um jogo</option>
+                {savedGamesList.map(g => (<option key={g.name} value={g.name}>{g.name}</option>))}
+            </select>
+            <button onClick={onOpenDeleteModal} disabled={!selectedGame} className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:opacity-50 border border-gray-600 hover:border-brand-red" title="Apagar jogo selecionado">
+                <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
+            </button>
+        </div>
         <div className="flex items-center justify-center text-4xl font-bold text-dark-text-secondary">
           {matchState.teamA.score} x {matchState.teamB.score}
         </div>
