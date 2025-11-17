@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Stopwatch from './components/Stopwatch';
 import MatchManagement from './components/MatchManagement';
@@ -157,7 +158,6 @@ const App: React.FC = () => {
         localStorage.setItem(SAVED_GAMES_KEY, JSON.stringify(savedGames));
         setSavedGamesList(savedGames.map(g => ({ name: g.name })));
         handleClearReport();
-        setSelectedGame('');
         setIsDeleteModalOpen(false);
     } catch (error) {
         console.error("Failed to delete game", error);
@@ -254,10 +254,10 @@ const App: React.FC = () => {
                 <button 
                     onClick={handleOpenDeleteModal} 
                     disabled={!selectedGame}
-                    className="p-2 bg-brand-red rounded-md hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                    className="p-2 bg-dark-surface rounded-md hover:bg-gray-700 disabled:bg-gray-600 disabled:cursor-not-allowed border border-gray-600 hover:border-brand-red"
                     title="Apagar jogo selecionado"
                 >
-                    <TrashIcon className="h-4 w-4 text-white" />
+                    <TrashIcon className="h-4 w-4 text-dark-text-secondary" />
                 </button>
             </div>
         </div>
